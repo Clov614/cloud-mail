@@ -5,7 +5,7 @@ import verifyRecordService from './service/verify-record-service';
 import emailService from './service/email-service';
 import kvObjService from './service/kv-obj-service';
 import v1Api from './api/v1-api.js';
-import { userContext } from './security/user-context';
+import userContext from './security/user-context';
 import {
 	auth,
 	adminAuth,

@@ -228,6 +228,30 @@ function permKeyToPaths(permKeys) {
 	return paths;
 }
 
+// ↓↓↓ [修复] 恢复 auth 函数 ↓↓↓
+const auth = async (c, next) => {
+	const url = new URL(c.req.url);
+	if (exclude.some(path => url.pathname.startsWith('/api' + path))) {
+		await next();
+		return;
+	}
+	await next();
+};
+
+// ↓↓↓ [修复] 恢复 adminAuth 函数 ↓↓↓
+const adminAuth = async (c, next) => {
+	const user = c.get('user');
+	if (user.type !== constant.USER_TYPE_ADMIN) {
+		return c.json(result.fail(t('notAdmin')));
+	}
+	const db = orm(c);
+	const check = await permService.checkUserPerm(db, user.userId, c.req.path);
+	if (check === false) {
+		return c.json(result.fail(t('notPerms')));
+	}
+	await next();
+};
+
 export {
 	auth,
 	adminAuth,

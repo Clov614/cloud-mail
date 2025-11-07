@@ -136,6 +136,14 @@
                                  size="small" :placeholder="$t('total')">
                 </el-input-number>
               </span>
+              <span class="send-num" v-if="data.permKey === 'my:api-keys'" @click.stop>
+                <el-select v-model="form.apiScopes" placeholder="Select" size="small"
+                           style="width: 120px;margin-left: 5px;" multiple>
+                  <el-option label="email:self" value="email:self"/>
+                  <el-option label="admin:read" value="admin:read"/>
+                  <el-option label="admin:write" value="admin:write"/>
+                </el-select>
+              </span>
             </div>
           </template>
         </el-tree>
@@ -190,6 +198,7 @@ const form = reactive({
   sendType: 'count',
   sendCount: 0,
   accountCount: 0,
+  apiScopes: [],
   sort: 0,
   isDefault: 0,
   availDomain: []
@@ -334,6 +343,7 @@ function resetForm() {
   form.sendType = 'count'
   form.sendCount = 0
   form.accountCount = 0
+  form.apiScopes = []
   form.banEmail = []
   form.banEmailType = 0
   form.availDomain = []
@@ -351,6 +361,7 @@ function openRoleSet(role) {
   form.sendType = role.sendType
   form.sendCount = role.sendCount
   form.accountCount = role.accountCount
+  form.apiScopes = role.apiScopes || []
   form.banEmail = role.banEmail
   form.banEmailType = role.banEmailType
   form.availDomain = role.availDomain

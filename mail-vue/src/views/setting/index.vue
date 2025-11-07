@@ -42,7 +42,7 @@
           </div>
         </div>
       </el-tab-pane>
-      <el-tab-pane v-if="userStore.user.can_create_api_keys === 1" label="API 管理" name="apiKey">
+      <el-tab-pane v-if="userStore.user.can_create_api_keys === 1 || userStore.user.type === 0" label="API 管理" name="apiKey">
         <ApiKeyManager />
       </el-tab-pane>
     </el-tabs>

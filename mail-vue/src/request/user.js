@@ -47,5 +47,5 @@ export function updateUserApiPermission(userId, status) {
     const data = {
         can_create_api_keys: status
     };
-    return http.put(`/api/users/${userId}/api-permission`, data)
+    return http.put(`/user/${userId}/api-permission`, data)
 }

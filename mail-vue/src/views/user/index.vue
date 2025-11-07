@@ -138,12 +138,14 @@
           <el-table-column :label="$t('user.apiPermission')" align="center" width="120">
             <template #default="scope">
               <el-switch
+                v-if="scope.row.can_create_api_keys !== undefined && scope.row.can_create_api_keys !== null"
                 v-model="scope.row.can_create_api_keys"
                 :active-value="1"
                 :inactive-value="0"
                 @change="handleApiPermissionChange(scope.row)"
                 :disabled="scope.row.type === 0"
               />
+              <span v-else>N/A</span>
             </template>
           </el-table-column>
           <el-table-column :label="$t('tabSetting')" :width="settingWidth">

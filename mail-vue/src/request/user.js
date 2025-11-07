@@ -49,3 +49,11 @@ export function updateUserApiPermission(userId, status) {
     };
     return http.put(`/user/${userId}/api-permission`, data)
 }
+
+// 更新用户的 API Scopes
+export function updateUserApiScopes(userId, scopes) {
+    const data = {
+        scopes: scopes
+    };
+    return http.put(`/user/${userId}/api-scopes`, data)
+}

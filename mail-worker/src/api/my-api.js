@@ -28,10 +28,10 @@ app.get('/my/api-keys', async (c) => {
 	const keys = await db.select({
 		id: apiKey.id,
 		description: apiKey.description,
-		keyPrefix: apiKey.keyPrefix,
-		createdAt: apiKey.createdAt,
-		lastUsedAt: apiKey.lastUsedAt,
-		expiresAt: apiKey.expiresAt,
+		key_prefix: apiKey.keyPrefix,
+		created_at: apiKey.createdAt,
+		last_used_at: apiKey.lastUsedAt,
+		expires_at: apiKey.expiresAt,
 		scopes: apiKey.scopes
 	}).from(apiKey).where(eq(apiKey.userId, user.userId));
 	return c.json(result.ok(keys));

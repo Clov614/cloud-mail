@@ -23,8 +23,73 @@ const init = {
 		await this.v1_7DB(c);
 		await this.v2DB(c);
 		await this.v2_3DB(c);
+		await this.v2_4DB(c);
 		await settingService.refresh(c);
 		return c.text(t('initSuccess'));
+	},
+
+	async v2_4DB(c) {
+		// API Key 功能相关的数据库迁移
+		try {
+			// 创建 api_key 表
+			await c.env.db.prepare(`
+				CREATE TABLE IF NOT EXISTS api_key (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					user_id INTEGER NOT NULL,
+					description TEXT,
+					key_prefix TEXT NOT NULL,
+					hashed_key TEXT NOT NULL,
+					created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+					last_used_at TEXT,
+					expires_at INTEGER,
+					scopes TEXT NOT NULL
+				)
+			`).run();
+
+			// 为 user 表添加 API Key 相关字段
+			await c.env.db.prepare(`ALTER TABLE user ADD COLUMN can_create_api_keys INTEGER NOT NULL DEFAULT 0;`).run();
+		} catch (e) {
+			console.warn(`跳过 api_key 表创建，原因：${e.message}`);
+		}
+
+		try {
+			await c.env.db.prepare(`ALTER TABLE user ADD COLUMN max_api_scopes TEXT;`).run();
+		} catch (e) {
+			console.warn(`跳过 max_api_scopes 字段添加，原因：${e.message}`);
+		}
+
+		try {
+			await c.env.db.prepare(`ALTER TABLE role ADD COLUMN api_scopes TEXT;`).run();
+		} catch (e) {
+			console.warn(`跳过 api_scopes 字段添加，原因：${e.message}`);
+		}
+
+		// 添加 API Key 管理权限到 perm 表
+		try {
+			await c.env.db.prepare(`
+				INSERT INTO perm (perm_id, name, perm_key, pid, type, sort) VALUES
+				(37, 'API管理', NULL, 0, 1, 2.2),
+				(38, 'API查看', 'my:api-keys', 37, 2, 0)
+			`).run();
+		} catch (e) {
+			console.warn(`跳过 API Key 权限数据插入，原因：${e.message}`);
+		}
+
+		// 为默认角色添加 API Key 权限（可选，根据需求决定）
+		try {
+			const { roleCount } = await c.env.db.prepare(`
+				SELECT COUNT(*) as roleCount FROM role_perm WHERE perm_id = 38
+			`).first();
+			
+			if (roleCount === 0) {
+				// 为默认角色（role_id=1）添加 API Key 查看权限
+				await c.env.db.prepare(`
+					INSERT INTO role_perm (role_id, perm_id) VALUES (1, 37), (1, 38)
+				`).run();
+			}
+		} catch (e) {
+			console.warn(`跳过默认角色 API Key 权限添加，原因：${e.message}`);
+		}
 	},
 
 	async v2_3DB(c) {

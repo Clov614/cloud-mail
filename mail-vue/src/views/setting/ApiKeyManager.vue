@@ -6,9 +6,12 @@
       <el-table v-loading="loading" :data="keyList" style="width: 100%; margin-top: 20px;">
         <el-table-column prop="description" label="描述" width="200"></el-table-column>
         <el-table-column prop="key_prefix" label="Key 前缀" width="150"></el-table-column>
-        <el-table-column prop="scopes" label="Scopes" width="150">
+        <el-table-column prop="scopes" label="权限范围" width="150">
           <template #default="scope">
-            {{ scope.row.scopes ? JSON.parse(scope.row.scopes).join(', ') : 'N/A' }}
+            <span v-if="scope.row.scopes">
+              {{ formatScopes(scope.row.scopes) }}
+            </span>
+            <span v-else style="color: #909399;">未设置</span>
           </template>
         </el-table-column>
         <el-table-column prop="expires_at" label="过期时间" width="180">
@@ -51,6 +54,19 @@ import { getApiKeys, createApiKey, deleteApiKey } from '@/request/my.js'
 
 const loading = ref(false)
 const keyList = ref([])
+
+const formatScopes = (scopesStr) => {
+  try {
+    const scopes = JSON.parse(scopesStr)
+    if (scopes.includes('admin')) return '完全管理员权限'
+    if (scopes.includes('admin:write')) return '管理员读写权限'
+    if (scopes.includes('admin:read')) return '管理员读取权限'
+    if (scopes.includes('email:self')) return '个人权限'
+    return scopes.join(', ')
+  } catch (e) {
+    return '解析错误'
+  }
+}
 
 const loadKeys = async () => {
   loading.value = true

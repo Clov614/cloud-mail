@@ -65,18 +65,27 @@ const init = {
 		}
 
 		// 添加 API 管理权限到 perm 表
-		// 结构：API管理（父节点）-> API Keys管理、创建邮箱、查询邮件列表、查询邮件详情（子节点）
+		// 结构：API管理（父节点）-> API查看、创建邮箱、查询邮件列表、查询邮件详情（子节点）
 		try {
 			await c.env.db.prepare(`
 				INSERT INTO perm (perm_id, name, perm_key, pid, type, sort) VALUES
 				(37, 'API管理', NULL, 0, 1, 2.2),
-				(38, 'API Keys管理', 'api:manage', 37, 2, 0),
+				(38, 'API查看', 'api:manage', 37, 2, 0),
 				(39, '创建邮箱', 'api:email-generate', 37, 2, 1),
 				(40, '查询邮件列表', 'api:email-list', 37, 2, 2),
 				(41, '查询邮件详情', 'api:email-detail', 37, 2, 3)
 			`).run();
 		} catch (e) {
 			console.warn(`跳过 API 权限数据插入，原因：${e.message}`);
+		}
+
+		// 修复已存在的权限节点名称（从"API Keys管理"改为"API查看"）
+		try {
+			await c.env.db.prepare(`
+				UPDATE perm SET name = 'API查看' WHERE perm_id = 38 AND name = 'API Keys管理'
+			`).run();
+		} catch (e) {
+			console.warn(`跳过权限名称更新，原因：${e.message}`);
 		}
 
 		// 为默认角色添加 API 权限（可选，根据需求决定）

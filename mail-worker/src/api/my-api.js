@@ -2,7 +2,7 @@ import app from '../hono/hono';
 import userService from '../service/user-service';
 import result from '../model/result';
 import userContext from '../security/user-context';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import apiKey from '../entity/api_key';
 import orm from '../entity/orm';
 import { generateApiKey, hashApiKey } from '../utils/crypto-utils';
@@ -102,7 +102,7 @@ app.delete('/my/api-keys/:keyId', async (c) => {
 	const user = c.get('user');
 	const keyId = parseInt(c.req.param('keyId'));
 	const db = orm(c);
-	await db.delete(apiKey).where(eq(apiKey.id, keyId)).where(eq(apiKey.userId, user.userId));
+	await db.delete(apiKey).where(and(eq(apiKey.id, keyId), eq(apiKey.userId, user.userId)));
 	return c.json(result.ok('删除成功'));
 });
 

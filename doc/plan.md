@@ -17,16 +17,16 @@
 
 ## M-API-002: 后端 - API-Key 管理逻辑 (内部接口)
 
-- [ ] `GET /api/my/api-keys`: 获取当前用户的所有API-Key。
-  - [ ] 仅返回非敏感信息 (如 `id`, `description`, `key_prefix`)。
-- [ ] `POST /api/my/api-keys`: 创建一个新的API-Key。
-  - [ ] 检查当前用户的 `can_create_api_keys` 权限。
-  - [ ] 生成高熵随机Key。
-  - [ ] 提取 `key_prefix`。
-  - [ ] 哈希完整Key并存入 `hashed_key`。
-  - [ ] 仅在响应中返回一次完整的明文Key。
-- [ ] `DELETE /api/my/api-keys/:keyId`: 删除一个API-Key。
-  - [ ] 校验 `keyId` 是否属于当前登录用户。
+- [x] `GET /api/my/api-keys`: 获取当前用户的所有API-Key。
+  - [x] 仅返回非敏感信息 (如 `id`, `description`, `key_prefix`)。
+- [x] `POST /api/my/api-keys`: 创建一个新的API-Key。
+  - [x] 检查当前用户的 `can_create_api_keys` 权限。
+  - [x] 生成高熵随机Key。
+  - [x] 提取 `key_prefix`。
+  - [x] 哈希完整Key并存入 `hashed_key`。
+  - [x] 仅在响应中返回一次完整的明文Key。
+- [x] `DELETE /api/my/api-keys/:keyId`: 删除一个API-Key。
+  - [x] 校验 `keyId` 是否属于当前登录用户。
 
 ## M-API-003: 后端 - 超管权限控制 (内部接口)
 

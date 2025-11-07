@@ -37,4 +37,18 @@ const saltHashUtils = {
 	}
 };
 
+export function generateApiKey() {
+	const secret = crypto.randomUUID().replaceAll('-', '');
+	const fullKey = 'cm_sk_' + secret;
+	const prefix = 'cm_' + secret.substring(secret.length - 4);
+	return { fullKey, prefix };
+}
+
+export async function hashApiKey(key) {
+	const data = encoder.encode(key);
+	const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+	const hashArray = Array.from(new Uint8Array(hashBuffer));
+	return Array.from(hashArray, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
 export default saltHashUtils;

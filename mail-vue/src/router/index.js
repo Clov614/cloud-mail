@@ -42,6 +42,16 @@ const routes = [
                 }
             },
             {
+                path: '/api-keys',
+                name: 'api-keys',
+                component: () => import('@/views/setting/ApiKeyManager.vue'),
+                meta: {
+                    title: 'API Keys',
+                    name: 'api-keys',
+                    menu: true
+                }
+            },
+            {
                 path: '/starred',
                 name: 'star',
                 component: () => import('@/views/star/index.vue'),

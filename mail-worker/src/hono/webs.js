@@ -1,5 +1,6 @@
 import app from './hono';
-import '../security/security'
+import '../security/security';
+import { checkScope } from '../security/security';
 
 import '../api/email-api';
 import '../api/user-api';

@@ -76,5 +76,26 @@ app.put('/user/:userId/api-permission', async (c) => {
 	return c.json(result.ok('权限更新成功'));
 });
 
+app.put('/user/:userId/api-scopes', async (c) => {
+	const userId = parseInt(c.req.param('userId'));
+	const { scopes } = await c.req.json();
+
+	// 验证 scopes 格式
+	if (scopes !== null && (!Array.isArray(scopes) || !scopes.every(s => typeof s === 'string'))) {
+		return c.json(result.error('无效的权限范围格式'));
+	}
+
+	const db = orm(c);
+	const updateResult = await db.update(User)
+		.set({ maxApiScopes: scopes ? JSON.stringify(scopes) : null })
+		.where(eq(User.userId, userId));
+
+	if (updateResult.rowsAffected === 0) {
+		return c.json(result.error('用户不存在'));
+	}
+
+	return c.json(result.ok('权限配置更新成功'));
+});
+
 
 

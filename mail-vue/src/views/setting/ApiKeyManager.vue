@@ -1,42 +1,45 @@
 <template>
-  <div class="api-key-manager">
-    <el-button type="primary" @click="handleGenerate">生成新的 API Key</el-button>
-    <el-table v-loading="loading" :data="keyList" style="width: 100%; margin-top: 20px;">
-      <el-table-column prop="description" label="描述" width="200"></el-table-column>
-      <el-table-column prop="key_prefix" label="Key 前缀" width="150"></el-table-column>
-      <el-table-column prop="scopes" label="Scopes" width="150">
-        <template #default="scope">
-          {{ scope.row.scopes ? JSON.parse(scope.row.scopes).join(', ') : 'N/A' }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="expires_at" label="过期时间" width="180">
-        <template #default="scope">
-          {{ scope.row.expires_at ? dayjs(scope.row.expires_at).format('YYYY-MM-DD HH:mm:ss') : '永不' }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="created_at" label="创建时间" width="180">
-        <template #default="scope">
-          {{ dayjs(scope.row.created_at).format('YYYY-MM-DD HH:mm:ss') }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="last_used_at" label="最后使用" width="180">
-        <template #default="scope">
-          {{ scope.row.last_used_at ? dayjs(scope.row.last_used_at).format('YYYY-MM-DD HH:mm:ss') : '从未使用' }}
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="100">
-        <template #default="scope">
-          <el-popconfirm
-            title="您确定要删除此 Key 吗？此操作不可撤销。"
-            @confirm="handleDelete(scope.row)"
-          >
-            <template #reference>
-              <el-button type="danger" size="small">删除</el-button>
-            </template>
-          </el-popconfirm>
-        </template>
-      </el-table-column>
-    </el-table>
+  <div class="box">
+    <div class="title">API Keys</div>
+    <div class="container">
+      <el-button type="primary" @click="handleGenerate">生成新的 API Key</el-button>
+      <el-table v-loading="loading" :data="keyList" style="width: 100%; margin-top: 20px;">
+        <el-table-column prop="description" label="描述" width="200"></el-table-column>
+        <el-table-column prop="key_prefix" label="Key 前缀" width="150"></el-table-column>
+        <el-table-column prop="scopes" label="Scopes" width="150">
+          <template #default="scope">
+            {{ scope.row.scopes ? JSON.parse(scope.row.scopes).join(', ') : 'N/A' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="expires_at" label="过期时间" width="180">
+          <template #default="scope">
+            {{ scope.row.expires_at ? dayjs(scope.row.expires_at).format('YYYY-MM-DD HH:mm:ss') : '永不' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="created_at" label="创建时间" width="180">
+          <template #default="scope">
+            {{ dayjs(scope.row.created_at).format('YYYY-MM-DD HH:mm:ss') }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="last_used_at" label="最后使用" width="180">
+          <template #default="scope">
+            {{ scope.row.last_used_at ? dayjs(scope.row.last_used_at).format('YYYY-MM-DD HH:mm:ss') : '从未使用' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="100">
+          <template #default="scope">
+            <el-popconfirm
+              title="您确定要删除此 Key 吗？此操作不可撤销。"
+              @confirm="handleDelete(scope.row)"
+            >
+              <template #reference>
+                <el-button type="danger" size="small">删除</el-button>
+              </template>
+            </el-popconfirm>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
   </div>
 </template>
 
@@ -144,8 +147,24 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.api-key-manager {
-  padding: 20px;
+<style scoped lang="scss">
+.box {
+  padding: 40px 40px;
+
+  @media (max-width: 767px) {
+    padding: 30px 30px;
+  }
+
+  .title {
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .container {
+    font-size: 14px;
+    display: grid;
+    gap: 20px;
+    margin-bottom: 40px;
+  }
 }
 </style>

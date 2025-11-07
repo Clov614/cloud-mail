@@ -60,12 +60,12 @@ const routers = {
         }
     ],
     'my:api-keys': [{
-        path: '/setting',
-        name: 'setting',
-        component: () => import('@/views/setting/index.vue'),
+        path: '/api-keys',
+        name: 'api-keys',
+        component: () => import('@/views/setting/ApiKeyManager.vue'),
         meta: {
-            title: 'settings',
-            name: 'setting',
+            title: 'API Keys',
+            name: 'api-keys',
             menu: true
         }
     }],

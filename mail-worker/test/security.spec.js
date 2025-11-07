@@ -94,7 +94,7 @@ describe('apiKeyAuthMiddleware', () => {
 
     // Mock db select to return apiKeyWithUser
     const mockApiKeyWithUser = {
-      api_key: { id: 1 },
+      api_key: { id: 1, scopes: '["email:self"]' },
       user: { userId: 123, email: 'test@example.com' }
     };
     const { default: orm } = await import('../src/entity/orm.js');

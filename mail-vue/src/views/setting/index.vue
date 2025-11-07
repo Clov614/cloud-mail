@@ -42,9 +42,6 @@
           </div>
         </div>
       </el-tab-pane>
-      <el-tab-pane v-if="userStore.user.can_create_api_keys === 1 || userStore.user.type === 0" label="API 管理" name="apiKey">
-        <ApiKeyManager />
-      </el-tab-pane>
     </el-tabs>
     <el-dialog v-model="pwdShow" :title="$t('changePassword')" width="340">
       <div class="update-pwd">
@@ -63,7 +60,6 @@ import router from "@/router/index.js";
 import {accountSetName} from "@/request/account.js";
 import {useAccountStore} from "@/store/account.js";
 import {useI18n} from "vue-i18n";
-import ApiKeyManager from './ApiKeyManager.vue'
 
 const { t } = useI18n()
 const accountStore = useAccountStore()

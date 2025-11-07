@@ -200,9 +200,19 @@ const apiKeyAuthMiddleware = async (c, next) => {
 		return c.json(result.fail('Invalid API Key'), 401);
 	}
 
-	// 5. 注入上下文
+	// 4. 时效性检查
+	const apiKeyData = apiKeyWithUser.api_key;
+	if (apiKeyData.expiresAt && new Date() > new Date(apiKeyData.expiresAt)) {
+		return c.json(result.fail('API-Key 已过期'), 401);
+	}
+
+	// 5. Scope 注入
+	const scopesArray = JSON.parse(apiKeyData.scopes);
+
+	// 6. 注入上下文
 	const user = apiKeyWithUser.user;
 	c.set('user', user); // <-- 核心步骤，与 user-context.js 行为一致
+	c.set('api_scopes', scopesArray); // <-- [新增] 注入权限范围
 
 	// 6. 质量优化 更新 Key 的 "最后使用时间" (异步，不阻塞)
 	const updateLastUsed = async () => {
@@ -258,8 +268,33 @@ const adminAuth = async (c, next) => {
 	await next();
 };
 
+/**
+ * Scope 权限校验中间件工厂函数
+ * @param {string} requiredScope - 需要的权限范围
+ * @returns {Function} Hono 中间件函数
+ */
+const checkScope = (requiredScope) => {
+	return async (c, next) => {
+		const apiScopes = c.get('api_scopes');
+
+		// 如果没有 api_scopes，说明不是通过 API Key 认证的
+		if (!apiScopes) {
+			await next();
+			return;
+		}
+
+		// 检查是否包含所需权限或超管权限
+		if (!apiScopes.includes(requiredScope) && !apiScopes.includes('admin')) {
+			return c.json(result.fail('权限不足 (Insufficient Scope)'), 403);
+		}
+
+		await next();
+	};
+};
+
 export {
 	auth,
 	adminAuth,
-	apiKeyAuthMiddleware
+	apiKeyAuthMiddleware,
+	checkScope
 };

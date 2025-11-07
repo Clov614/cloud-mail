@@ -30,7 +30,9 @@ app.get('/my/api-keys', async (c) => {
 		description: apiKey.description,
 		keyPrefix: apiKey.keyPrefix,
 		createdAt: apiKey.createdAt,
-		lastUsedAt: apiKey.lastUsedAt
+		lastUsedAt: apiKey.lastUsedAt,
+		expiresAt: apiKey.expiresAt,
+		scopes: apiKey.scopes
 	}).from(apiKey).where(eq(apiKey.userId, user.userId));
 	return c.json(result.ok(keys));
 });
@@ -40,7 +42,16 @@ app.post('/my/api-keys', async (c) => {
 	if (user.canCreateApiKeys !== 1) {
 		return c.json(result.error('您没有创建API-Key的权限'));
 	}
-	const { description } = await c.req.json();
+	const { description, expiresAt } = await c.req.json();
+
+	// 确定 scopes
+	let scopes;
+	if (user.maxApiScopes) {
+		scopes = user.maxApiScopes; // 超管设定的最大权限
+	} else {
+		scopes = JSON.stringify(['email:self']); // 个人用户默认权限
+	}
+
 	const { fullKey, prefix } = generateApiKey();
 	const hashedKey = await hashApiKey(fullKey);
 	const db = orm(c);
@@ -48,13 +59,17 @@ app.post('/my/api-keys', async (c) => {
 		userId: user.userId,
 		description,
 		keyPrefix: prefix,
-		hashedKey
+		hashedKey,
+		expiresAt: expiresAt ? new Date(expiresAt) : null,
+		scopes
 	}).returning({ id: apiKey.id });
 	return c.json(result.ok({
 		id: inserted.id,
 		description,
 		keyPrefix: prefix,
-		fullKey
+		fullKey,
+		expiresAt,
+		scopes: JSON.parse(scopes)
 	}));
 });
 

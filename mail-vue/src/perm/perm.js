@@ -59,6 +59,16 @@ const routers = {
             }
         }
     ],
+    'my:api-keys': [{
+        path: '/setting',
+        name: 'setting',
+        component: () => import('@/views/setting/index.vue'),
+        meta: {
+            title: 'settings',
+            name: 'setting',
+            menu: true
+        }
+    }],
     'user:query': [{
         path: '/all-users',
         name: 'user',

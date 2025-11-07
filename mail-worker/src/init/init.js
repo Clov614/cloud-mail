@@ -64,31 +64,36 @@ const init = {
 			console.warn(`跳过 api_scopes 字段添加，原因：${e.message}`);
 		}
 
-		// 添加 API Key 管理权限到 perm 表
+		// 添加 API 管理权限到 perm 表
+		// 结构：API管理（父节点）-> API Keys管理、创建邮箱、查询邮件列表、查询邮件详情（子节点）
 		try {
 			await c.env.db.prepare(`
 				INSERT INTO perm (perm_id, name, perm_key, pid, type, sort) VALUES
 				(37, 'API管理', NULL, 0, 1, 2.2),
-				(38, 'API查看', 'my:api-keys', 37, 2, 0)
+				(38, 'API Keys管理', 'api:manage', 37, 2, 0),
+				(39, '创建邮箱', 'api:email-generate', 37, 2, 1),
+				(40, '查询邮件列表', 'api:email-list', 37, 2, 2),
+				(41, '查询邮件详情', 'api:email-detail', 37, 2, 3)
 			`).run();
 		} catch (e) {
-			console.warn(`跳过 API Key 权限数据插入，原因：${e.message}`);
+			console.warn(`跳过 API 权限数据插入，原因：${e.message}`);
 		}
 
-		// 为默认角色添加 API Key 权限（可选，根据需求决定）
+		// 为默认角色添加 API 权限（可选，根据需求决定）
 		try {
 			const { roleCount } = await c.env.db.prepare(`
-				SELECT COUNT(*) as roleCount FROM role_perm WHERE perm_id = 38
+				SELECT COUNT(*) as roleCount FROM role_perm WHERE perm_id IN (37, 38, 39, 40, 41)
 			`).first();
 			
 			if (roleCount === 0) {
-				// 为默认角色（role_id=1）添加 API Key 查看权限
+				// 为默认角色（role_id=1）添加所有 API 权限
 				await c.env.db.prepare(`
-					INSERT INTO role_perm (role_id, perm_id) VALUES (1, 37), (1, 38)
+					INSERT INTO role_perm (role_id, perm_id) VALUES
+					(1, 37), (1, 38), (1, 39), (1, 40), (1, 41)
 				`).run();
 			}
 		} catch (e) {
-			console.warn(`跳过默认角色 API Key 权限添加，原因：${e.message}`);
+			console.warn(`跳过默认角色 API 权限添加，原因：${e.message}`);
 		}
 	},
 

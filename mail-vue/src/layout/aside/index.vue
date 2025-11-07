@@ -31,14 +31,14 @@
           <Icon icon="fluent:settings-48-regular" width="20" height="20" />
           <span class="menu-name" style="margin-left: 21px">{{$t('settings')}}</span>
         </el-menu-item>
-        <div class="manage-title" v-perm="['all-email:query','user:query','role:query','setting:query','analysis:query','reg-key:query','my:api-keys']">
-          <div>{{$t('manage')}}</div>
-        </div>
-        <el-menu-item @click="router.push({name: 'api-keys'})" index="api-keys" v-perm="'my:api-keys'"
+        <el-menu-item @click="router.push({name: 'api-keys'})" index="api-keys" v-perm="'api:manage'"
                       :class="route.meta.name === 'api-keys' ? 'choose-item' : ''">
           <Icon icon="fluent:key-20-regular" width="20" height="20" />
           <span class="menu-name" style="margin-left: 21px">API Keys</span>
         </el-menu-item>
+        <div class="manage-title" v-perm="['all-email:query','user:query','role:query','setting:query','analysis:query','reg-key:query']">
+          <div>{{$t('manage')}}</div>
+        </div>
         <el-menu-item @click="router.push({name: 'analysis'})" index="analysis" v-perm="'analysis:query'"
                       :class="route.meta.name === 'analysis' ? 'choose-item' : ''">
           <Icon icon="fluent:data-pie-20-regular" width="24" height="24" />

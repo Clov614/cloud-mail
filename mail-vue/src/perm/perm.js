@@ -59,7 +59,7 @@ const routers = {
             }
         }
     ],
-    'my:api-keys': [{
+    'api:manage': [{
         path: '/api-keys',
         name: 'api-keys',
         component: () => import('@/views/setting/ApiKeyManager.vue'),

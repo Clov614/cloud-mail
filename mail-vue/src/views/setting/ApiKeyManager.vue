@@ -58,11 +58,12 @@ const keyList = ref([])
 const formatScopes = (scopesStr) => {
   try {
     const scopes = JSON.parse(scopesStr)
-    if (scopes.includes('admin')) return '完全管理员权限'
-    if (scopes.includes('admin:write')) return '管理员读写权限'
-    if (scopes.includes('admin:read')) return '管理员读取权限'
-    if (scopes.includes('email:self')) return '个人权限'
-    return scopes.join(', ')
+    const scopeNames = {
+      'api:email-generate': '创建邮箱',
+      'api:email-list': '查询邮件列表',
+      'api:email-detail': '查询邮件详情'
+    }
+    return scopes.map(s => scopeNames[s] || s).join(', ')
   } catch (e) {
     return '解析错误'
   }

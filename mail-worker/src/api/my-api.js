@@ -39,37 +39,53 @@ app.get('/my/api-keys', async (c) => {
 
 app.post('/my/api-keys', async (c) => {
 	const user = c.get('user');
-	if (user.canCreateApiKeys !== 1) {
+	
+	// 检查用户是否有 api:manage 权限
+	const db = orm(c);
+	const permService = require('../service/perm-service').default;
+	const userPermKeys = await permService.userPermKeys(c, user.userId);
+	
+	if (!userPermKeys.includes('api:manage')) {
 		return c.json(result.error('您没有创建API-Key的权限'));
 	}
+	
 	const { description, expiresAt } = await c.req.json();
 
-	// 确定 scopes
-	let scopes;
-	if (user.maxApiScopes) {
-		scopes = user.maxApiScopes; // 超管设定的最大权限
-	} else {
-		scopes = JSON.stringify(['email:self']); // 个人用户默认权限
+	// 根据用户的权限确定 API Key 的 scopes
+	const scopes = [];
+	if (userPermKeys.includes('api:email-generate')) {
+		scopes.push('api:email-generate');
+	}
+	if (userPermKeys.includes('api:email-list')) {
+		scopes.push('api:email-list');
+	}
+	if (userPermKeys.includes('api:email-detail')) {
+		scopes.push('api:email-detail');
+	}
+	
+	// 如果没有任何 API 权限，返回错误
+	if (scopes.length === 0) {
+		return c.json(result.error('您没有任何 API 使用权限'));
 	}
 
 	const { fullKey, prefix } = generateApiKey();
 	const hashedKey = await hashApiKey(fullKey);
-	const db = orm(c);
 	const [inserted] = await db.insert(apiKey).values({
 		userId: user.userId,
 		description,
 		keyPrefix: prefix,
 		hashedKey,
 		expiresAt: expiresAt ? new Date(expiresAt) : null,
-		scopes
+		scopes: JSON.stringify(scopes)
 	}).returning({ id: apiKey.id });
+	
 	return c.json(result.ok({
 		id: inserted.id,
 		description,
 		keyPrefix: prefix,
 		fullKey,
 		expiresAt,
-		scopes: JSON.parse(scopes)
+		scopes
 	}));
 });
 

@@ -21,7 +21,7 @@ v1Api.use('*', async (c, next) => {
   await next();
 });
 
-v1Api.post('/emails/generate', checkScope('email:self'), async (c) => {
+v1Api.post('/emails/generate', checkScope('api:email-generate'), async (c) => {
   const user = c.get('user'); // (已由中间件保证存在)
   const { name, domain } = await c.req.json();
 
@@ -37,7 +37,7 @@ v1Api.post('/emails/generate', checkScope('email:self'), async (c) => {
   }
 });
 
-v1Api.get('/:emailAddress/messages', checkScope('email:self'), async (c) => {
+v1Api.get('/:emailAddress/messages', checkScope('api:email-list'), async (c) => {
   const user = c.get('user');
   const emailAddress = c.req.param('emailAddress');
   const page = parseInt(c.req.query('page') || '1');
@@ -74,7 +74,7 @@ v1Api.get('/:emailAddress/messages', checkScope('email:self'), async (c) => {
   return c.json(result.ok({ data: messages, pagination }));
 });
 
-v1Api.get('/:emailAddress/messages/:messageId', checkScope('email:self'), async (c) => {
+v1Api.get('/:emailAddress/messages/:messageId', checkScope('api:email-detail'), async (c) => {
   const user = c.get('user');
   const emailAddress = c.req.param('emailAddress');
   const messageId = c.req.param('messageId');

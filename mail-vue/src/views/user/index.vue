@@ -135,6 +135,17 @@
               </div>
             </template>
           </el-table-column>
+          <el-table-column :label="$t('user.apiPermission')" align="center" width="120">
+            <template #default="scope">
+              <el-switch
+                v-model="scope.row.can_create_api_keys"
+                :active-value="1"
+                :inactive-value="0"
+                @change="handleApiPermissionChange(scope.row)"
+                :disabled="scope.row.type === 0"
+              />
+            </template>
+          </el-table-column>
           <el-table-column :label="$t('tabSetting')" :width="settingWidth">
             <template #default="props">
               <el-dropdown trigger="click">
@@ -293,7 +304,8 @@ import {
   userRestSendCount,
   userRestore,
   userDeleteAccount,
-  userAllAccount
+  userAllAccount,
+  updateUserApiPermission
 } from '@/request/user.js'
 import {roleSelectUse} from "@/request/role.js";
 import {Icon} from "@iconify/vue";
@@ -884,6 +896,18 @@ function adjustWidth() {
   layout.value = width < 768 ? 'pager' : 'prev, pager, next,sizes, total'
   phonePageShow.value = width < 768
   pageSize.value = width < 380 ? 'small' : ''
+}
+
+const handleApiPermissionChange = async (row) => {
+  try {
+    const newStatus = row.can_create_api_keys; // (此时 v-model 已经更新了 row 上的值)
+    await updateUserApiPermission(row.userId, newStatus);
+    ElMessage.success('权限更新成功');
+  } catch (error) {
+    ElMessage.error('权限更新失败');
+    // 出错时将开关恢复原状
+    row.can_create_api_keys = row.can_create_api_keys === 1 ? 0 : 1;
+  }
 }
 
 </script>

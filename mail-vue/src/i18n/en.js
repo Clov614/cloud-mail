@@ -86,7 +86,9 @@ const en = {
     from: 'From',
     subject: 'Subject',
     sender: 'Sender',
-    user: 'User',
+    user: {
+        apiPermission: 'API Permission'
+    },
     searchByContent: 'Enter text to search',
     noRecipient: 'No recipient',
     received: 'Received',

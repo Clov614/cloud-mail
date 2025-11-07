@@ -41,3 +41,11 @@ export function userAllAccount(userId, num, size) {
 export function userDeleteAccount(accountId) {
     return http.delete('/user/deleteAccount', {params:{accountId}})
 }
+
+// 更新用户的 API 权限
+export function updateUserApiPermission(userId, status) {
+    const data = {
+        can_create_api_keys: status
+    };
+    return http.put(`/api/users/${userId}/api-permission`, data)
+}

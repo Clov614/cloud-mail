@@ -103,7 +103,9 @@ const zh = {
 		"创建邮箱": "创建邮箱",
 		"查询邮件列表": "查询邮件列表",
 		"查询邮件详情": "查询邮件详情"
-	}
+	},
+	noApiKeyPermission: '您没有创建API-Key的权限',
+	noApiScopePermission: '您没有任何 API 使用权限'
 }
 
 export default zh

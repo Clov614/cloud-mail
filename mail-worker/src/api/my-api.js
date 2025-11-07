@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import apiKey from '../entity/api_key';
 import orm from '../entity/orm';
 import { generateApiKey, hashApiKey } from '../utils/crypto-utils';
+import { t } from '../i18n/i18n';
 
 app.get('/my/loginUserInfo', async (c) => {
 	const user = await userService.loginUserInfo(c, userContext.getUserId(c));
@@ -47,7 +48,7 @@ app.post('/my/api-keys', async (c) => {
 	const isAdmin = user.email === c.env.admin;
 	
 	if (!userPermKeys.includes('api:manage') && !isAdmin) {
-		return c.json(result.fail('您没有创建API-Key的权限'));
+		return c.json(result.fail(t('noApiKeyPermission')));
 	}
 	
 	const { description, expiresAt } = await c.req.json();
@@ -73,7 +74,7 @@ app.post('/my/api-keys', async (c) => {
 	
 	// 如果没有任何 API 权限，返回错误
 	if (scopes.length === 0) {
-		return c.json(result.fail('您没有任何 API 使用权限'));
+		return c.json(result.fail(t('noApiScopePermission')));
 	}
 
 	const { fullKey, prefix } = generateApiKey();
@@ -90,9 +91,9 @@ app.post('/my/api-keys', async (c) => {
 	return c.json(result.ok({
 		id: inserted.id,
 		description,
-		keyPrefix: prefix,
+		key_prefix: prefix,
 		fullKey,
-		expiresAt,
+		expires_at: expiresAt,
 		scopes
 	}));
 });

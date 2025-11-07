@@ -103,7 +103,9 @@ const en = {
 		"创建邮箱": "Generate Email",
 		"查询邮件列表": "List Messages",
 		"查询邮件详情": "Get Message Details"
-	}
+	},
+	noApiKeyPermission: 'You do not have permission to create API Keys',
+	noApiScopePermission: 'You do not have any API usage permissions'
 };
 
 export default en;

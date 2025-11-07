@@ -1,0 +1,410 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "111614.xyz 临时邮箱 API",
+    "description": "根据你提供的文档生成的 OpenAPI 3.0 规范，用于 Apifox 导入",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://111614.xyz",
+      "description": "生产服务器"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "所有 API 请求都需要通过 API Key 进行认证"
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "paths": {
+    "/api/users/create-menke": {
+      "post": {
+        "summary": "创建门客用户",
+        "description": "创建门客用户 (仅皇帝可用)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "description": "门客的用户名"
+                  },
+                  "domainNames": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "用于生成门客邮箱的域名列表"
+                  }
+                },
+                "required": ["username", "domainNames"],
+                "example": {
+                  "username": "menke_user_01",
+                  "domainNames": ["moemail.app", "moemail.app", "example.com"]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "门客用户创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "username": { "type": "string" }
+                      }
+                    },
+                    "assignedEmails": { "type": "array", "items": { "type": "string" } },
+                    "generatedPassword": { "type": "string" }
+                  }
+                },
+                "example": {
+                  "message": "门客用户创建成功",
+                  "user": {
+                    "id": "user_uuid_here",
+                    "username": "menke_user_01"
+                  },
+                  "assignedEmails": ["randomprefix1@moemail.app", "randomprefix2@moemail.app", "randomprefix3@example.com"],
+                  "generatedPassword": "a_very_secure_random_password"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/create-pioneer": {
+      "post": {
+        "summary": "创建开拓者用户",
+        "description": "创建开拓者用户 (仅皇帝可用)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "description": "开拓者的用户名"
+                  },
+                  "domainNames": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "用于为开拓者分配邮箱的域名列表"
+                  }
+                },
+                "required": ["username", "domainNames"],
+                "example": {
+                  "username": "pioneer_user_01",
+                  "domainNames": ["example.com", "example.com", "moemail.app"]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "开拓者用户创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "username": { "type": "string" }
+                      }
+                    },
+                    "generatedPassword": { "type": "string" },
+                    "allocatedEmailsInfo": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "domain": { "type": "string" },
+                          "temporaryAddress": { "type": "string" },
+                          "emailId": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "message": "开拓者用户创建成功",
+                  "user": {
+                    "id": "user_uuid_here",
+                    "username": "pioneer_user_01"
+                  },
+                  "generatedPassword": "a_very_secure_random_password",
+                  "allocatedEmailsInfo": [
+                    { "domain": "example.com", "temporaryAddress": "pioneer_temp_xxxx@example.com", "emailId": "email_uuid_1" },
+                    { "domain": "example.com", "temporaryAddress": "pioneer_temp_yyyy@example.com", "emailId": "email_uuid_2" },
+                    { "domain": "moemail.app", "temporaryAddress": "pioneer_temp_zzzz@moemail.app", "emailId": "email_uuid_3" }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/emails/generate": {
+      "post": {
+        "summary": "创建临时邮箱",
+        "description": "创建临时邮箱",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "邮箱前缀 (可选)"
+                  },
+                  "expiryTime": {
+                    "type": "number",
+                    "description": "有效期（毫秒），例如 3600000 (1小时)",
+                    "example": 3600000
+                  },
+                  "domain": {
+                    "type": "string",
+                    "description": "邮箱域名 (可选)"
+                  }
+                },
+                "example": {
+                  "name": "test",
+                  "expiryTime": 3600000,
+                  "domain": "moemail.app"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "创建成功 (推测的响应)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "邮箱的唯一ID"
+                    },
+                    "address": {
+                      "type": "string",
+                      "description": "完整的邮箱地址"
+                    }
+                  },
+                  "example": {
+                    "id": "email_uuid_12345",
+                    "address": "test@moemail.app"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/emails": {
+      "get": {
+        "summary": "获取邮箱列表",
+        "description": "获取当前用户创建的邮箱列表",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": { "type": "string" },
+            "description": "分页游标"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功 (推测的响应)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "emails": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "address": { "type": "string" }
+                        }
+                      }
+                    },
+                    "nextCursor": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/emails/{emailId}": {
+      "get": {
+        "summary": "获取邮件列表",
+        "description": "获取指定邮箱的邮件列表",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "emailId",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "邮箱的唯一ID"
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": { "type": "string" },
+            "description": "分页游标"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功 (推测的响应)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "from": { "type": "string" },
+                          "subject": { "type": "string" },
+                          "date": { "type": "string", "format": "date-time" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除临时邮箱",
+        "description": "删除指定的临时邮箱",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "emailId",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "邮箱的唯一ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "删除成功"
+          }
+        }
+      }
+    },
+    "/api/emails/{emailId}/{messageId}": {
+      "get": {
+        "summary": "获取单封邮件内容",
+        "description": "获取单封邮件的详细内容",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "emailId",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "邮箱的唯一ID"
+          },
+          {
+            "in": "path",
+            "name": "messageId",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "邮件的唯一ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功 (推测的响应)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "from": { "type": "string" },
+                    "subject": { "type": "string" },
+                    "date": { "type": "string", "format": "date-time" },
+                    "text": { "type": "string", "description": "邮件的纯文本内容" },
+                    "html": { "type": "string", "description": "邮件的HTML内容" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/emails/domains": {
+      "get": {
+        "summary": "获取可用域名列表",
+        "description": "获取可用的邮箱域名列表",
+        "responses": {
+          "200": {
+            "description": "成功 (推测的响应)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "example": [
+                  "moemail.app",
+                  "example.com"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

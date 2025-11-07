@@ -4,6 +4,16 @@
     <el-table v-loading="loading" :data="keyList" style="width: 100%; margin-top: 20px;">
       <el-table-column prop="description" label="描述" width="200"></el-table-column>
       <el-table-column prop="key_prefix" label="Key 前缀" width="150"></el-table-column>
+      <el-table-column prop="scopes" label="Scopes" width="150">
+        <template #default="scope">
+          {{ scope.row.scopes ? JSON.parse(scope.row.scopes).join(', ') : 'N/A' }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="expires_at" label="过期时间" width="180">
+        <template #default="scope">
+          {{ scope.row.expires_at ? dayjs(scope.row.expires_at).format('YYYY-MM-DD HH:mm:ss') : '永不' }}
+        </template>
+      </el-table-column>
       <el-table-column prop="created_at" label="创建时间" width="180">
         <template #default="scope">
           {{ dayjs(scope.row.created_at).format('YYYY-MM-DD HH:mm:ss') }}
@@ -60,7 +70,49 @@ const handleGenerate = async () => {
       inputErrorMessage: '描述不能为空'
     })
 
-    const res = await createApiKey({ description })
+    // 选择过期时间
+    const expiresAt = await new Promise((resolve) => {
+      ElMessageBox.confirm(
+        '请选择 Key 的过期时间（可选）',
+        '设置过期时间',
+        {
+          confirmButtonText: '设置过期时间',
+          cancelButtonText: '永不过期',
+          distinguishCancelAndClose: true,
+          customClass: 'expires-dialog'
+        }
+      ).then(() => {
+        // 用户选择设置过期时间
+        const datePicker = document.createElement('input')
+        datePicker.type = 'datetime-local'
+        datePicker.min = new Date().toISOString().slice(0, 16)
+        ElMessageBox({
+          title: '选择过期时间',
+          message: datePicker,
+          showCancelButton: true,
+          confirmButtonText: '确定',
+          cancelButtonText: '取消'
+        }).then(({ value }) => {
+          if (value) {
+            resolve(new Date(datePicker.value).getTime())
+          } else {
+            resolve(null)
+          }
+        }).catch(() => {
+          resolve(null)
+        })
+      }).catch(() => {
+        // 用户选择永不过期
+        resolve(null)
+      })
+    })
+
+    const data = { description }
+    if (expiresAt) {
+      data.expires_at = expiresAt
+    }
+
+    const res = await createApiKey(data)
     await ElMessageBox.alert(
       `这是您唯一一次看到此 Key，请立即复制并妥善保存。Key 泄露将危害您的账户安全。\n\nKey: ${res.data.fullKey}`,
       'API Key 已生成',

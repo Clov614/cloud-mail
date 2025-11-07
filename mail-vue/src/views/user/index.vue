@@ -146,6 +146,15 @@
                 :disabled="scope.row.type === 0"
               />
               <span v-else>N/A</span>
+              <el-button
+                v-if="scope.row.can_create_api_keys === 1"
+                size="small"
+                type="primary"
+                @click="openApiScopesDialog(scope.row)"
+                style="margin-left: 10px"
+              >
+                配置权限
+              </el-button>
             </template>
           </el-table-column>
           <el-table-column :label="$t('tabSetting')" :width="settingWidth">
@@ -291,6 +300,21 @@
         />
       </div>
     </el-dialog>
+    <el-dialog v-model="apiScopesShow" :title="'配置API权限'" width="600px">
+      <div class="scopes-container">
+        <el-checkbox-group v-model="selectedScopes">
+          <el-checkbox label="email:self">email:self - 仅限自身邮箱操作</el-checkbox>
+          <el-checkbox label="admin:read">admin:read - 管理员读取权限</el-checkbox>
+          <el-checkbox label="admin:write">admin:write - 管理员写入权限</el-checkbox>
+        </el-checkbox-group>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="apiScopesShow = false">取消</el-button>
+          <el-button type="primary" @click="saveApiScopes">保存</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -307,7 +331,8 @@ import {
   userRestore,
   userDeleteAccount,
   userAllAccount,
-  updateUserApiPermission
+  updateUserApiPermission,
+  updateUserApiScopes
 } from '@/request/user.js'
 import {roleSelectUse} from "@/request/role.js";
 import {Icon} from "@iconify/vue";
@@ -390,6 +415,9 @@ const accountParams = reactive({
   total: 0,
   userId: 0,
 })
+const apiScopesShow = ref(false)
+const selectedScopes = ref([])
+const currentUserForScopes = ref(null)
 
 roleSelectUse().then(list => {
   roleList.length = 0
@@ -912,6 +940,24 @@ const handleApiPermissionChange = async (row) => {
   }
 }
 
+const openApiScopesDialog = (row) => {
+  currentUserForScopes.value = row
+  selectedScopes.value = row.max_api_scopes ? JSON.parse(row.max_api_scopes) : []
+  apiScopesShow.value = true
+}
+
+const saveApiScopes = async () => {
+  try {
+    const scopes = selectedScopes.value.length > 0 ? selectedScopes.value : null
+    await updateUserApiScopes(currentUserForScopes.value.userId, scopes)
+    currentUserForScopes.value.max_api_scopes = scopes ? JSON.stringify(scopes) : null
+    apiScopesShow.value = false
+    ElMessage.success('权限配置更新成功')
+  } catch (error) {
+    ElMessage.error('权限配置更新失败')
+  }
+}
+
 </script>
 
 <style>
@@ -1148,5 +1194,13 @@ const handleApiPermissionChange = async (row) => {
 
 :deep(.el-message-box__container) {
   align-items: start;
+}
+
+.scopes-container {
+  padding: 20px;
+}
+
+.dialog-footer {
+  text-align: right;
 }
 </style>

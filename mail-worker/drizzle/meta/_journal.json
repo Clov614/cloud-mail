@@ -8,6 +8,13 @@
       "when": 1762523210515,
       "tag": "0000_nebulous_sleeper",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1762530726041,
+      "tag": "0001_spotty_proteus",
+      "breakpoints": true
     }
   ]
 }

@@ -8,7 +8,9 @@ const apiKey = sqliteTable('api_key', {
 	keyPrefix: text('key_prefix').notNull(),
 	hashedKey: text('hashed_key').notNull(),
 	createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
-	lastUsedAt: text('last_used_at')
+	lastUsedAt: text('last_used_at'),
+	expiresAt: integer('expires_at', { mode: 'timestamp_ms' }),
+	scopes: text('scopes').notNull()
 });
 
 export default apiKey;

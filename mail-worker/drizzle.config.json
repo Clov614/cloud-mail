@@ -1,0 +1,5 @@
+{
+  "dialect": "sqlite",
+  "schema": "./src/entity/*.js",
+  "out": "./drizzle"
+}

@@ -1,42 +1,42 @@
 <template>
   <div class="box">
-    <div class="title">API Keys</div>
+    <div class="title">{{ $t('apiKeys') }}</div>
     <div class="container">
-      <el-button type="primary" @click="handleGenerate">生成新的 API Key</el-button>
+      <el-button type="primary" @click="handleGenerate">{{ $t('generateApiKey') }}</el-button>
       <el-table v-loading="loading" :data="keyList" style="width: 100%; margin-top: 20px;">
-        <el-table-column prop="description" label="描述" width="200"></el-table-column>
-        <el-table-column prop="key_prefix" label="Key 前缀" width="150"></el-table-column>
-        <el-table-column prop="scopes" label="权限范围" width="150">
+        <el-table-column prop="description" :label="$t('apiKeyDescription')" width="200"></el-table-column>
+        <el-table-column prop="key_prefix" :label="$t('keyPrefix')" width="150"></el-table-column>
+        <el-table-column prop="scopes" :label="$t('permissionScope')" width="150">
           <template #default="scope">
             <span v-if="scope.row.scopes">
               {{ formatScopes(scope.row.scopes) }}
             </span>
-            <span v-else style="color: #909399;">未设置</span>
+            <span v-else style="color: #909399;">{{ $t('notSet') }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="expires_at" label="过期时间" width="180">
+        <el-table-column prop="expires_at" :label="$t('expiresAt')" width="180">
           <template #default="scope">
-            {{ scope.row.expires_at ? dayjs(scope.row.expires_at).format('YYYY-MM-DD HH:mm:ss') : '永不' }}
+            {{ scope.row.expires_at ? dayjs(scope.row.expires_at).format('YYYY-MM-DD HH:mm:ss') : $t('neverExpires') }}
           </template>
         </el-table-column>
-        <el-table-column prop="created_at" label="创建时间" width="180">
+        <el-table-column prop="created_at" :label="$t('createdAt')" width="180">
           <template #default="scope">
             {{ dayjs(scope.row.created_at).format('YYYY-MM-DD HH:mm:ss') }}
           </template>
         </el-table-column>
-        <el-table-column prop="last_used_at" label="最后使用" width="180">
+        <el-table-column prop="last_used_at" :label="$t('lastUsedAt')" width="180">
           <template #default="scope">
-            {{ scope.row.last_used_at ? dayjs(scope.row.last_used_at).format('YYYY-MM-DD HH:mm:ss') : '从未使用' }}
+            {{ scope.row.last_used_at ? dayjs(scope.row.last_used_at).format('YYYY-MM-DD HH:mm:ss') : $t('neverUsed') }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="100">
+        <el-table-column :label="$t('action')" width="100">
           <template #default="scope">
             <el-popconfirm
-              title="您确定要删除此 Key 吗？此操作不可撤销。"
+              :title="$t('deleteApiKeyConfirm')"
               @confirm="handleDelete(scope.row)"
             >
               <template #reference>
-                <el-button type="danger" size="small">删除</el-button>
+                <el-button type="danger" size="small">{{ $t('deleteApiKey') }}</el-button>
               </template>
             </el-popconfirm>
           </template>
@@ -50,7 +50,10 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
+import { useI18n } from 'vue-i18n'
 import { getApiKeys, createApiKey, deleteApiKey } from '@/request/my.js'
+
+const { t } = useI18n()
 
 const loading = ref(false)
 const keyList = ref([])
@@ -59,13 +62,13 @@ const formatScopes = (scopesStr) => {
   try {
     const scopes = JSON.parse(scopesStr)
     const scopeNames = {
-      'api:email-generate': '创建邮箱',
-      'api:email-list': '查询邮件列表',
-      'api:email-detail': '查询邮件详情'
+      'api:email-generate': t('scopeEmailGenerate'),
+      'api:email-list': t('scopeEmailList'),
+      'api:email-detail': t('scopeEmailDetail')
     }
     return scopes.map(s => scopeNames[s] || s).join(', ')
   } catch (e) {
-    return '解析错误'
+    return t('parseError')
   }
 }
 
@@ -75,7 +78,7 @@ const loadKeys = async () => {
     const res = await getApiKeys()
     keyList.value = res.data
   } catch (error) {
-    ElMessage.error('加载 API Key 列表失败')
+    ElMessage.error(t('loadApiKeysFailed'))
   } finally {
     loading.value = false
   }
@@ -83,38 +86,39 @@ const loadKeys = async () => {
 
 const handleGenerate = async () => {
   try {
-    const { value: description } = await ElMessageBox.prompt('请输入 Key 描述', '生成 API Key', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    const { value: description } = await ElMessageBox.prompt(t('enterDescription'), t('generateApiKey'), {
+      confirmButtonText: t('confirm'),
+      cancelButtonText: t('cancel'),
       inputPattern: /.+/,
-      inputErrorMessage: '描述不能为空'
+      inputErrorMessage: t('descriptionRequired')
     })
 
     // 选择过期时间
     const expiresAt = await new Promise((resolve) => {
       ElMessageBox.confirm(
-        '请选择 Key 的过期时间（可选）',
-        '设置过期时间',
+        t('selectExpiresTime'),
+        t('setExpiresTime'),
         {
-          confirmButtonText: '设置过期时间',
-          cancelButtonText: '永不过期',
-          distinguishCancelAndClose: true,
-          customClass: 'expires-dialog'
+          confirmButtonText: t('setExpiresTime'),
+          cancelButtonText: t('neverExpire'),
+          distinguishCancelAndClose: true
         }
       ).then(() => {
-        // 用户选择设置过期时间
-        const datePicker = document.createElement('input')
-        datePicker.type = 'datetime-local'
-        datePicker.min = new Date().toISOString().slice(0, 16)
-        ElMessageBox({
-          title: '选择过期时间',
-          message: datePicker,
-          showCancelButton: true,
-          confirmButtonText: '确定',
-          cancelButtonText: '取消'
-        }).then(({ value }) => {
+        // 用户选择设置过期时间，使用 prompt 输入
+        ElMessageBox.prompt(
+          t('selectExpiresTime'),
+          t('setExpiresTime'),
+          {
+            confirmButtonText: t('confirm'),
+            cancelButtonText: t('cancel'),
+            inputType: 'datetime-local',
+            inputValue: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+            inputPattern: /.+/,
+            inputErrorMessage: t('selectExpiresTime')
+          }
+        ).then(({ value }) => {
           if (value) {
-            resolve(new Date(datePicker.value).getTime())
+            resolve(new Date(value).getTime())
           } else {
             resolve(null)
           }
@@ -134,17 +138,17 @@ const handleGenerate = async () => {
 
     const res = await createApiKey(data)
     await ElMessageBox.alert(
-      `这是您唯一一次看到此 Key，请立即复制并妥善保存。Key 泄露将危害您的账户安全。\n\nKey: ${res.data.fullKey}`,
-      'API Key 已生成',
+      `${t('apiKeyWarning')}\n\nKey: ${res.data.fullKey}`,
+      t('apiKeyGenerated'),
       {
-        confirmButtonText: '我已复制',
+        confirmButtonText: t('iHaveCopied'),
         type: 'warning'
       }
     )
     loadKeys()
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('生成 API Key 失败')
+      ElMessage.error(t('generateApiKeyFailed'))
     }
   }
 }
@@ -152,10 +156,10 @@ const handleGenerate = async () => {
 const handleDelete = async (row) => {
   try {
     await deleteApiKey(row.id)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('deleteApiKeySuccess'))
     loadKeys()
   } catch (error) {
-    ElMessage.error('删除 API Key 失败')
+    ElMessage.error(t('deleteApiKeyFailed'))
   }
 }
 

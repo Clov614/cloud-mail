@@ -97,7 +97,12 @@ const en = {
 		"系统设置": "System Settings",
 		"设置查看": "View Settings",
 		"设置修改": "Change Settings",
-		"发件重置": "Reset Send Count"
+		"发件重置": "Reset Send Count",
+		"API管理": "API Management",
+		"API Keys管理": "API Keys Management",
+		"创建邮箱": "Generate Email",
+		"查询邮件列表": "List Messages",
+		"查询邮件详情": "Get Message Details"
 	}
 };
 

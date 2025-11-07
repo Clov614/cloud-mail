@@ -1,44 +1,51 @@
 <template>
   <div class="box">
-    <div class="container">
-      <div class="title">{{$t('profile')}}</div>
-      <div class="item">
-        <div>{{$t('username')}}</div>
-        <div>
-          <span v-if="setNameShow" class="edit-name-input">
-            <el-input v-model="accountName"  ></el-input>
-            <span class="edit-name" @click="setName">
-             {{$t('save')}}
-            </span>
-          </span>
-          <span v-else class="user-name">
-            <span >{{ userStore.user.name }}</span>
-            <span class="edit-name" @click="showSetName">
-             {{$t('change')}}
-            </span>
-          </span>
+    <el-tabs v-model="activeTab" @tab-click="handleTabClick">
+      <el-tab-pane label="个人资料" name="profile">
+        <div class="container">
+          <div class="title">{{$t('profile')}}</div>
+          <div class="item">
+            <div>{{$t('username')}}</div>
+            <div>
+              <span v-if="setNameShow" class="edit-name-input">
+                <el-input v-model="accountName"  ></el-input>
+                <span class="edit-name" @click="setName">
+                 {{$t('save')}}
+                </span>
+              </span>
+              <span v-else class="user-name">
+                <span >{{ userStore.user.name }}</span>
+                <span class="edit-name" @click="showSetName">
+                 {{$t('change')}}
+                </span>
+              </span>
+            </div>
+          </div>
+          <div class="item">
+            <div>{{$t('emailAccount')}}</div>
+            <div>{{ userStore.user.email }}</div>
+          </div>
+          <div class="item">
+            <div>{{$t('password')}}</div>
+            <div>
+              <el-button type="primary" @click="pwdShow = true">{{$t('changePwdBtn')}}</el-button>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="item">
-        <div>{{$t('emailAccount')}}</div>
-        <div>{{ userStore.user.email }}</div>
-      </div>
-      <div class="item">
-        <div>{{$t('password')}}</div>
-        <div>
-          <el-button type="primary" @click="pwdShow = true">{{$t('changePwdBtn')}}</el-button>
+        <div class="del-email" v-perm="'my:delete'">
+          <div class="title">{{$t('deleteUser')}}</div>
+          <div style="color: var(--regular-text-color);">
+            {{$t('delAccountMsg')}}
+          </div>
+          <div>
+            <el-button type="primary" @click="deleteConfirm">{{$t('deleteUserBtn')}}</el-button>
+          </div>
         </div>
-      </div>
-    </div>
-    <div class="del-email" v-perm="'my:delete'">
-      <div class="title">{{$t('deleteUser')}}</div>
-      <div style="color: var(--regular-text-color);">
-        {{$t('delAccountMsg')}}
-      </div>
-      <div>
-        <el-button type="primary" @click="deleteConfirm">{{$t('deleteUserBtn')}}</el-button>
-      </div>
-    </div>
+      </el-tab-pane>
+      <el-tab-pane v-if="userStore.user.can_create_api_keys === 1" label="API 管理" name="apiKey">
+        <ApiKeyManager />
+      </el-tab-pane>
+    </el-tabs>
     <el-dialog v-model="pwdShow" :title="$t('changePassword')" width="340">
       <div class="update-pwd">
         <el-input type="password" :placeholder="$t('newPassword')" v-model="form.password" autocomplete="off"/>
@@ -56,6 +63,7 @@ import router from "@/router/index.js";
 import {accountSetName} from "@/request/account.js";
 import {useAccountStore} from "@/store/account.js";
 import {useI18n} from "vue-i18n";
+import ApiKeyManager from './ApiKeyManager.vue'
 
 const { t } = useI18n()
 const accountStore = useAccountStore()
@@ -63,6 +71,7 @@ const userStore = useUserStore();
 const setPwdLoading = ref(false)
 const setNameShow = ref(false)
 const accountName = ref(null)
+const activeTab = ref('profile')
 
 defineOptions({
   name: 'setting'
@@ -176,6 +185,10 @@ function submitPwd() {
     setPwdLoading.value = false
   })
 
+}
+
+const handleTabClick = (tab) => {
+  // 可以在这里添加标签切换逻辑
 }
 
 </script>

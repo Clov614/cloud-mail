@@ -30,10 +30,10 @@
 
 ## M-API-003: 后端 - 超管权限控制 (内部接口)
 
-- [ ] `PUT /api/users/:userId/api-permission`: 更新指定用户的API权限。
-  - [ ] 确保此接口受Admin权限保护。
-  - [ ] 接收 `{ can_create_api_keys: true/false }`。
-  - [ ] 更新 User 表中对应用户的 `can_create_api_keys` 字段。
+- [x] `PUT /api/users/:userId/api-permission`: 更新指定用户的API权限。
+  - [x] 确保此接口受Admin权限保护。
+  - [x] 接收 `{ can_create_api_keys: true/false }`。
+  - [x] 更新 User 表中对应用户的 `can_create_api_keys` 字段。
 
 ## M-API-004: 前端 - 用户API-Key管理界面
 

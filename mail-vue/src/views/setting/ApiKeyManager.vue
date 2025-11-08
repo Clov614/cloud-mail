@@ -55,9 +55,7 @@
     >
       <div class="api-key-content">
         <div class="warning-section">
-          <el-icon class="warning-icon" :size="24">
-            <WarningFilled />
-          </el-icon>
+          <Icon icon="mdi:alert-circle" class="warning-icon" :width="24" :height="24" />
           <div class="warning-text">
             {{ t('apiKeyWarning') }}
           </div>
@@ -67,9 +65,7 @@
           <div class="key-label">API Key</div>
           <div class="key-display" @click="copyToClipboard">
             <div class="key-text">{{ generatedApiKey }}</div>
-            <el-icon class="copy-icon" :size="20">
-              <DocumentCopy />
-            </el-icon>
+            <Icon icon="mdi:content-copy" class="copy-icon" :width="20" :height="20" />
           </div>
           <div class="copy-hint">{{ t('clickToCopy') }}</div>
         </div>
@@ -87,7 +83,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { WarningFilled, DocumentCopy } from '@element-plus/icons-vue'
+import { Icon } from '@iconify/vue'
 import dayjs from 'dayjs'
 import { useI18n } from 'vue-i18n'
 import { getApiKeys, createApiKey, deleteApiKey } from '@/request/my.js'

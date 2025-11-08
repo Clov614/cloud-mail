@@ -39,63 +39,68 @@ app.get('/my/api-keys', async (c) => {
 });
 
 app.post('/my/api-keys', async (c) => {
-	const user = c.get('user');
-	
-	// 检查用户是否有 api:manage 权限或是超管
-	const db = orm(c);
-	const permService = require('../service/perm-service').default;
-	const userPermKeys = await permService.userPermKeys(c, user.userId);
-	const isAdmin = user.email === c.env.admin;
-	
-	if (!userPermKeys.includes('api:manage') && !isAdmin) {
-		return c.json(result.fail(t('noApiKeyPermission')));
-	}
-	
-	const { description, expiresAt } = await c.req.json();
+	try {
+		const user = c.get('user');
+		
+		// 检查用户是否有 api:manage 权限或是超管
+		const db = orm(c);
+		const permService = require('../service/perm-service').default;
+		const userPermKeys = await permService.userPermKeys(c, user.userId);
+		const isAdmin = user.email === c.env.admin;
+		
+		if (!userPermKeys.includes('api:manage') && !isAdmin) {
+			return c.json(result.fail(t('noApiKeyPermission')));
+		}
+		
+		const { description, expiresAt } = await c.req.json();
 
-	// 根据用户的权限确定 API Key 的 scopes
-	const scopes = [];
-	
-	// 超管拥有所有权限
-	if (isAdmin) {
-		scopes.push('api:email-generate', 'api:email-list', 'api:email-detail');
-	} else {
-		// 普通用户根据权限添加
-		if (userPermKeys.includes('api:email-generate')) {
-			scopes.push('api:email-generate');
+		// 根据用户的权限确定 API Key 的 scopes
+		const scopes = [];
+		
+		// 超管拥有所有权限
+		if (isAdmin) {
+			scopes.push('api:email-generate', 'api:email-list', 'api:email-detail');
+		} else {
+			// 普通用户根据权限添加
+			if (userPermKeys.includes('api:email-generate')) {
+				scopes.push('api:email-generate');
+			}
+			if (userPermKeys.includes('api:email-list')) {
+				scopes.push('api:email-list');
+			}
+			if (userPermKeys.includes('api:email-detail')) {
+				scopes.push('api:email-detail');
+			}
 		}
-		if (userPermKeys.includes('api:email-list')) {
-			scopes.push('api:email-list');
+		
+		// 如果没有任何 API 权限，返回错误
+		if (scopes.length === 0) {
+			return c.json(result.fail(t('noApiScopePermission')));
 		}
-		if (userPermKeys.includes('api:email-detail')) {
-			scopes.push('api:email-detail');
-		}
-	}
-	
-	// 如果没有任何 API 权限，返回错误
-	if (scopes.length === 0) {
-		return c.json(result.fail(t('noApiScopePermission')));
-	}
 
-	const { fullKey, prefix } = generateApiKey();
-	const hashedKey = await hashApiKey(fullKey);
-	const [inserted] = await db.insert(apiKey).values({
-		userId: user.userId,
-		description,
-		keyPrefix: prefix,
-		hashedKey,
-		expiresAt: expiresAt ? new Date(expiresAt) : null,
-		scopes: JSON.stringify(scopes)
-	}).returning({ id: apiKey.id });
-	
-	return c.json(result.ok({
-		id: inserted.id,
-		description,
-		key_prefix: prefix,
-		fullKey,
-		expires_at: expiresAt,
-		scopes
-	}));
+		const { fullKey, prefix } = generateApiKey();
+		const hashedKey = await hashApiKey(fullKey);
+		const [inserted] = await db.insert(apiKey).values({
+			userId: user.userId,
+			description,
+			keyPrefix: prefix,
+			hashedKey,
+			expiresAt: expiresAt ? new Date(expiresAt) : null,
+			scopes: JSON.stringify(scopes)
+		}).returning({ id: apiKey.id });
+		
+		return c.json(result.ok({
+			id: inserted.id,
+			description,
+			key_prefix: prefix,
+			full_key: fullKey,
+			expires_at: expiresAt,
+			scopes
+		}));
+	} catch (error) {
+		console.error('创建 API Key 失败:', error);
+		return c.json(result.fail('创建 API Key 失败: ' + error.message));
+	}
 });
 
 app.delete('/my/api-keys/:keyId', async (c) => {

@@ -130,7 +130,23 @@ const userService = {
 		}
 
 
-		const query = orm(c).select().from(user)
+		const query = orm(c).select({
+			userId: user.userId,
+			email: user.email,
+			type: user.type,
+			status: user.status,
+			createTime: user.createTime,
+			activeTime: user.activeTime,
+			createIp: user.createIp,
+			activeIp: user.activeIp,
+			os: user.os,
+			browser: user.browser,
+			device: user.device,
+			sendCount: user.sendCount,
+			isDel: user.isDel,
+			can_create_api_keys: user.canCreateApiKeys,
+			max_api_scopes: user.maxApiScopes
+		}).from(user)
 			.where(and(...conditions));
 
 

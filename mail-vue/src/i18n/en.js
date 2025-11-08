@@ -89,6 +89,12 @@ const en = {
     user: {
         apiPermission: 'API Permission'
     },
+    perms: {
+        'API查看': 'API Access',
+        '创建邮箱': 'Generate Email',
+        '查询邮件列表': 'List Messages',
+        '查询邮件详情': 'Get Message Details'
+    },
     searchByContent: 'Enter text to search',
     noRecipient: 'No recipient',
     received: 'Received',

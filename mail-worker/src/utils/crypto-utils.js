@@ -40,7 +40,7 @@ const saltHashUtils = {
 export function generateApiKey() {
 	const secret = crypto.randomUUID().replaceAll('-', '');
 	const fullKey = 'cm_sk_' + secret;
-	const prefix = 'cm_' + secret.substring(secret.length - 4);
+	const prefix = fullKey.substring(0, 7); // 提取 'cm_sk_' + 前4位，例如 'cm_sk_8'
 	return { fullKey, prefix };
 }
 

@@ -58,9 +58,10 @@ const { t } = useI18n()
 const loading = ref(false)
 const keyList = ref([])
 
-const formatScopes = (scopesStr) => {
+const formatScopes = (scopesData) => {
   try {
-    const scopes = JSON.parse(scopesStr)
+    // 处理可能是字符串或数组的情况
+    const scopes = typeof scopesData === 'string' ? JSON.parse(scopesData) : scopesData
     const scopeNames = {
       'api:email-generate': t('scopeEmailGenerate'),
       'api:email-list': t('scopeEmailList'),
@@ -133,22 +134,31 @@ const handleGenerate = async () => {
 
     const data = { description }
     if (expiresAt) {
-      data.expires_at = expiresAt
+      data.expiresAt = expiresAt
     }
 
     const res = await createApiKey(data)
+    
+    // 检查响应是否成功
+    if (res.code !== 200) {
+      ElMessage.error(res.message || t('generateApiKeyFailed'))
+      return
+    }
+    
     await ElMessageBox.alert(
-      `${t('apiKeyWarning')}\n\nKey: ${res.data.fullKey}`,
+      `${t('apiKeyWarning')}\n\nKey: ${res.data.full_key}`,
       t('apiKeyGenerated'),
       {
         confirmButtonText: t('iHaveCopied'),
         type: 'warning'
       }
     )
-    loadKeys()
+    await loadKeys()
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error(t('generateApiKeyFailed'))
+      console.error('生成API Key错误:', error)
+      const errorMsg = error.response?.data?.message || error.message || t('generateApiKeyFailed')
+      ElMessage.error(errorMsg)
     }
   }
 }

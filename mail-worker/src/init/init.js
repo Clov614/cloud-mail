@@ -88,21 +88,23 @@ const init = {
 			console.warn(`跳过权限名称更新，原因：${e.message}`);
 		}
 
-		// 为默认角色添加 API 权限（可选，根据需求决定）
+		// 注意：默认不为普通用户角色添加 API 权限
+		// 管理员可以通过权限控制页面为特定角色分配 API 权限
+		
+		// 清理旧版本创建的无效 API Keys（key_prefix 格式不正确的）
+		// 旧格式：cm_xxxx (6字符)，新格式：cm_sk_x (7字符)
 		try {
-			const { roleCount } = await c.env.db.prepare(`
-				SELECT COUNT(*) as roleCount FROM role_perm WHERE perm_id IN (37, 38, 39, 40, 41)
+			const { invalidCount } = await c.env.db.prepare(`
+				SELECT COUNT(*) as invalidCount FROM api_key
+				WHERE LENGTH(key_prefix) != 7 OR key_prefix NOT LIKE 'cm_sk_%'
 			`).first();
 			
-			if (roleCount === 0) {
-				// 为默认角色（role_id=1）添加所有 API 权限
-				await c.env.db.prepare(`
-					INSERT INTO role_perm (role_id, perm_id) VALUES
-					(1, 37), (1, 38), (1, 39), (1, 40), (1, 41)
-				`).run();
+			if (invalidCount > 0) {
+				console.log(`发现 ${invalidCount} 个旧格式的 API Key，建议用户删除并重新创建`);
+				// 注意：我们不自动删除，让用户手动删除，因为可能还在使用
 			}
 		} catch (e) {
-			console.warn(`跳过默认角色 API 权限添加，原因：${e.message}`);
+			console.warn(`检查旧 API Key 失败，原因：${e.message}`);
 		}
 	},
 

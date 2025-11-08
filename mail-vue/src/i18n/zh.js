@@ -89,6 +89,12 @@ const zh = {
     user: {
         apiPermission: 'API权限'
     },
+    perms: {
+        'API查看': 'API查看',
+        '创建邮箱': '创建邮箱',
+        '查询邮件列表': '查询邮件列表',
+        '查询邮件详情': '查询邮件详情'
+    },
     searchByContent: '输入内容查询',
     noRecipient: '无收件人',
     received: '已接收',

@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import result from '../model/result';
+import BizError from '../error/biz-error';
 import orm from '../entity/orm';
 import { eq, and, desc, count } from 'drizzle-orm';
 import Account from '../entity/account';

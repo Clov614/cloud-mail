@@ -3,6 +3,7 @@ import result from '../model/result';
 import BizError from '../error/biz-error';
 import orm from '../entity/orm';
 import { eq, and, desc, count } from 'drizzle-orm';
+import { isDel } from '../const/entity-const';
 import Account from '../entity/account';
 import Email from '../entity/email';
 import accountService from '../service/account-service';
@@ -41,7 +42,7 @@ v1Api.get('/emails', async (c) => {
 	// 查询总数
 	const [totalResult] = await db.select({ count: count() })
 		.from(Account)
-		.where(and(eq(Account.userId, user.userId), eq(Account.isDel, 0)));
+		.where(and(eq(Account.userId, user.userId), eq(Account.isDel, isDel.NORMAL)));
 
 	// 查询分页数据
 	const accounts = await db.select({
@@ -50,7 +51,7 @@ v1Api.get('/emails', async (c) => {
 		name: Account.name,
 		created_at: Account.createTime
 	}).from(Account)
-		.where(and(eq(Account.userId, user.userId), eq(Account.isDel, 0)))
+		.where(and(eq(Account.userId, user.userId), eq(Account.isDel, isDel.NORMAL)))
 		.orderBy(desc(Account.accountId))
 		.limit(limit)
 		.offset(offset);
@@ -120,15 +121,15 @@ v1Api.get('/messages', async (c) => {
     .from(Email).where(eq(Email.address, emailAddress));
 
   const messages = await db.select({
-      id: Email.id,
-      from: Email.from,
-      subject: Email.subject,
-      date: Email.createTime //
-    }).from(Email)
-    .where(eq(Email.address, emailAddress))
-    .orderBy(desc(Email.id))
-    .limit(limit)
-    .offset(offset);
+  	id: Email.id,
+  	from: Email.from,
+  	subject: Email.subject,
+  	date: Email.createTime
+  }).from(Email)
+  	.where(eq(Email.address, emailAddress))
+  	.orderBy(desc(Email.id))
+  	.limit(limit)
+  	.offset(offset);
 
   const totalItems = totalResult.count;
   const totalPages = Math.ceil(totalItems / limit);
@@ -162,10 +163,10 @@ v1Api.get('/messages/:messageId', async (c) => {
 
   // [优化] `messageId` 在 `Email` 表中是 `id`
   const [message] = await db.select().from(Email)
-    .where(and(
-      eq(Email.address, emailAddress),
-      eq(Email.id, parseInt(messageId)) // (id 是 integer)
-    )).limit(1);
+  	.where(and(
+  		eq(Email.address, emailAddress),
+  		eq(Email.id, parseInt(messageId))
+  	)).limit(1);
 
   if (!message) {
     return c.json(result.fail('Message not found'), 404);

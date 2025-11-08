@@ -10,7 +10,7 @@ import app from '../hono/hono';
 import { hashApiKey, timingSafeEqual } from '../utils/crypto-utils';
 import apiKey from '../entity/api_key';
 import User from '../entity/user';
-import { eq, like } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import orm from '../entity/orm';
 import result from '../model/result';
 
@@ -202,9 +202,7 @@ const apiKeyAuthMiddleware = async (c, next) => {
 		return c.json(result.fail('Invalid API Key format', 401), 401);
 	}
 	const keyPrefix = key.substring(0, 8); // 'cm_sk_xx'
-	const possibleKeys = await db.select()
-		.from(apiKey)
-		.where(eq(apiKey.keyPrefix, keyPrefix));
+	const possibleKeys = await db.select().from(apiKey).where(eq(apiKey.keyPrefix, keyPrefix));
 
 	if (!possibleKeys.length) {
 		return c.json(result.fail('Invalid API Key', 401), 401);

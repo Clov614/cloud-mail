@@ -51,4 +51,24 @@ export async function hashApiKey(key) {
 	return Array.from(hashArray, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
+
+/**
+	* 时序安全的字符串比较函数
+	* @param {string} a - a 字符串
+	* @param {string} b - b 字符串
+	* @returns {boolean} - 如果 a === b, 返回 true
+	*/
+export function timingSafeEqual(a, b) {
+	if (a.length !== b.length) {
+		return false;
+	}
+
+	let diff = 0;
+	for (let i = 0; i < a.length; i++) {
+		diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+	}
+
+	return diff === 0;
+}
+
 export default saltHashUtils;

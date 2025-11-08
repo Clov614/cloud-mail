@@ -7,10 +7,10 @@ import userService from '../service/user-service';
 import permService from '../service/perm-service';
 import { t } from '../i18n/i18n'
 import app from '../hono/hono';
-import { hashApiKey } from '../utils/crypto-utils';
+import { hashApiKey, timingSafeEqual } from '../utils/crypto-utils';
 import apiKey from '../entity/api_key';
 import User from '../entity/user';
-import { eq } from 'drizzle-orm';
+import { eq, like } from 'drizzle-orm';
 import orm from '../entity/orm';
 import result from '../model/result';
 
@@ -188,57 +188,73 @@ const apiKeyAuthMiddleware = async (c, next) => {
 	const key = c.req.header('X-API-Key');
 
 	if (!key) {
-		// 没有 API Key，假定这是普通的浏览器请求。
-		// 不做任何事，直接进入下一个中间件 (即 `auth` 中间件)。
-		await next();
-		return;
+		// 如果没有 API Key，交由下一个中间件处理 (通常是JWT认证)
+		return await next();
 	}
 
-	// 验证逻辑
-	// 1. 哈希传入的 Key
-	const hashedKey = await hashApiKey(key);
+	// --- API Key 认证流程 ---
 
-	// 2. 先查询 API Key
 	const db = orm(c);
-	const [apiKeyRecord] = await db.select()
-		.from(apiKey)
-		.where(eq(apiKey.hashedKey, hashedKey));
 
-	// 3. 处理无效 Key
-	if (!apiKeyRecord) {
+	// 1. 根据 key_prefix 快速查找
+	// 'cm_sk_xxxx'
+	if (key.length < 8 || !key.startsWith('cm_sk_')) {
+		return c.json(result.fail('Invalid API Key format', 401), 401);
+	}
+	const keyPrefix = key.substring(0, 7); // 'cm_sk_x'
+	const possibleKeys = await db.select()
+		.from(apiKey)
+		.where(like(apiKey.keyPrefix, `${keyPrefix}%`));
+
+	if (!possibleKeys.length) {
 		return c.json(result.fail('Invalid API Key', 401), 401);
 	}
 
-	// 4. 查询关联的用户
+	// 2. 哈希传入的完整 Key
+	const incomingHashedKey = await hashApiKey(key);
+	let matchedApiKey = null;
+
+	// 3. 时序安全地比较哈希值
+	for (const keyRecord of possibleKeys) {
+		if (timingSafeEqual(keyRecord.hashedKey, incomingHashedKey)) {
+			matchedApiKey = keyRecord;
+			break;
+		}
+	}
+
+	// 4. 处理无效 Key
+	if (!matchedApiKey) {
+		return c.json(result.fail('Invalid API Key', 401), 401);
+	}
+
+	// 5. 查询关联的用户
 	const [userRecord] = await db.select()
 		.from(User)
-		.where(eq(User.userId, apiKeyRecord.userId));
+		.where(eq(User.userId, matchedApiKey.userId));
 
 	if (!userRecord) {
+		// 数据不一致的罕见情况
 		return c.json(result.fail('Invalid API Key - User not found', 401), 401);
 	}
 
-	// 5. 时效性检查
-	const apiKeyData = apiKeyRecord;
-	if (apiKeyData.expiresAt && new Date() > new Date(apiKeyData.expiresAt)) {
-		return c.json(result.fail('API-Key 已过期', 401), 401);
+	// 6. 检查 Key 是否过期
+	if (matchedApiKey.expiresAt && new Date() > new Date(matchedApiKey.expiresAt)) {
+		return c.json(result.fail('API Key has expired', 401), 401);
 	}
-
-	// 6. Scope 注入
-	const scopesArray = JSON.parse(apiKeyData.scopes);
-
+	
 	// 7. 注入上下文
+	const scopesArray = matchedApiKey.scopes ? JSON.parse(matchedApiKey.scopes) : [];
 	c.set('user', userRecord);
 	c.set('api_scopes', scopesArray);
 
-	// 8. 更新 Key 的 "最后使用时间" (异步，不阻塞)
+	// 8. 异步更新 "最后使用时间"
 	const updateLastUsed = async () => {
 		try {
 			await db.update(apiKey)
 				.set({ lastUsedAt: new Date() })
-				.where(eq(apiKey.id, apiKeyData.id));
+				.where(eq(apiKey.id, matchedApiKey.id));
 		} catch (e) {
-			console.error('Failed to update API key last_used_at', e);
+			console.error('Failed to update API key last_used_at:', e);
 		}
 	};
 	c.executionCtx.waitUntil(updateLastUsed());

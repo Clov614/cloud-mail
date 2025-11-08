@@ -118,16 +118,16 @@ v1Api.get('/messages', async (c) => {
 
   // [优化] 仅 select 列表所需的字段
   const [totalResult] = await db.select({ count: count() })
-    .from(Email).where(eq(Email.address, emailAddress));
-
+  	.from(Email).where(eq(Email.toEmail, emailAddress));
+ 
   const messages = await db.select({
-  	id: Email.id,
-  	from: Email.from,
+  	id: Email.emailId,
+  	from: Email.sendEmail,
   	subject: Email.subject,
   	date: Email.createTime
   }).from(Email)
-  	.where(eq(Email.address, emailAddress))
-  	.orderBy(desc(Email.id))
+  	.where(eq(Email.toEmail, emailAddress))
+  	.orderBy(desc(Email.emailId))
   	.limit(limit)
   	.offset(offset);
 
@@ -161,11 +161,11 @@ v1Api.get('/messages/:messageId', async (c) => {
     return c.json(result.fail('Email address not found or access denied'), 404);
   }
 
-  // [优化] `messageId` 在 `Email` 表中是 `id`
+  // [优化] `messageId` 在 `Email` 表中是 `emailId`
   const [message] = await db.select().from(Email)
   	.where(and(
-  		eq(Email.address, emailAddress),
-  		eq(Email.id, parseInt(messageId))
+  		eq(Email.toEmail, emailAddress),
+  		eq(Email.emailId, parseInt(messageId))
   	)).limit(1);
 
   if (!message) {

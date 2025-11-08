@@ -80,7 +80,7 @@ v1Api.post('/emails/generate', async (c) => {
   	// 构造调用 accountService.add 所需的参数
   	const params = { email, token: null }; // API调用不需要人机验证token
   	const newAccount = await accountService.add(c, params, user.userId);
- 
+
   	return c.json(result.ok({
   		id: newAccount.accountId,
   		address: newAccount.email

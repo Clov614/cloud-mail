@@ -15,6 +15,7 @@ app.use('/api/*', userContext)
 app.use('/api/*', apiKeyAuthMiddleware)
 app.use('/api/*', auth)
 
+// 为 v1 API 创建独立的中间件链
 app.use('/v1/*', userContext)
 app.use('/v1/*', apiKeyAuthMiddleware)
 
@@ -32,8 +33,7 @@ export default {
 		}
 
 		if (url.pathname.startsWith('/v1/')) {
-			url.pathname = url.pathname.replace('/v1', '')
-			req = new Request(url.toString(), req)
+			// 不重写路径，直接传递给 Hono 应用处理
 			return app.fetch(req, env, ctx);
 		}
 

@@ -242,8 +242,17 @@ const apiKeyAuthMiddleware = async (c, next) => {
 		return c.json(result.fail('API Key has expired', 401), 401);
 	}
 	
-	// 7. 注入上下文
-	const scopesArray = matchedApiKey.scopes ? JSON.parse(matchedApiKey.scopes) : [];
+	// 7. 注入上下文 (增加容错)
+	let scopesArray = [];
+	if (matchedApiKey.scopes) {
+		try {
+			scopesArray = JSON.parse(matchedApiKey.scopes);
+		} catch (e) {
+			console.error(`Failed to parse API key scopes for key ID ${matchedApiKey.id}:`, e);
+			// 解析失败时，给予空数组，保证程序不会崩溃
+			scopesArray = [];
+		}
+	}
 	c.set('user', userRecord);
 	c.set('api_scopes', scopesArray);
 

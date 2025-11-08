@@ -35,13 +35,19 @@ v1Api.post('/emails/generate', async (c) => {
   const { name, domain } = await c.req.json();
 
   try {
-    const newAccount = await accountService.addAccount(c, name, domain, null, null, user.userId);
-    return c.json(result.ok({
-      id: newAccount.id,
-      address: newAccount.email
-    }));
+  	// 构造 email
+  	const email = `${name}@${domain}`;
+  	// 构造调用 accountService.add 所需的参数
+  	const params = { email, token: null }; // API调用不需要人机验证token
+  	const newAccount = await accountService.add(c, params, user.userId);
+ 
+  	return c.json(result.ok({
+  		id: newAccount.accountId,
+  		address: newAccount.email
+  	}));
   } catch (e) {
-    return c.json(result.fail(e.message), 400);
+  	const statusCode = e instanceof BizError ? e.statusCode : 400;
+  	return c.json(result.fail(e.message), statusCode);
   }
 });
 

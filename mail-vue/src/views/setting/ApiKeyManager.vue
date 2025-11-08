@@ -76,10 +76,13 @@ const formatScopes = (scopesData) => {
 const loadKeys = async () => {
   loading.value = true
   try {
-    const res = await getApiKeys()
-    keyList.value = res.data
+    // axios 拦截器已经处理了响应，直接返回 data.data（即数组）
+    const keys = await getApiKeys()
+    keyList.value = keys || []
   } catch (error) {
-    ElMessage.error(t('loadApiKeysFailed'))
+    console.error('加载API Keys失败:', error)
+    keyList.value = []
+    // axios 拦截器会自动显示错误消息
   } finally {
     loading.value = false
   }
@@ -137,16 +140,11 @@ const handleGenerate = async () => {
       data.expiresAt = expiresAt
     }
 
-    const res = await createApiKey(data)
-    
-    // 检查响应是否成功
-    if (res.code !== 200) {
-      ElMessage.error(res.message || t('generateApiKeyFailed'))
-      return
-    }
+    // axios 拦截器已经处理了响应，直接返回 data.data
+    const apiKeyData = await createApiKey(data)
     
     await ElMessageBox.alert(
-      `${t('apiKeyWarning')}\n\nKey: ${res.data.full_key}`,
+      `${t('apiKeyWarning')}\n\nKey: ${apiKeyData.full_key}`,
       t('apiKeyGenerated'),
       {
         confirmButtonText: t('iHaveCopied'),
@@ -157,8 +155,7 @@ const handleGenerate = async () => {
   } catch (error) {
     if (error !== 'cancel') {
       console.error('生成API Key错误:', error)
-      const errorMsg = error.response?.data?.message || error.message || t('generateApiKeyFailed')
-      ElMessage.error(errorMsg)
+      // axios 拦截器会自动显示错误消息，这里只需要记录
     }
   }
 }

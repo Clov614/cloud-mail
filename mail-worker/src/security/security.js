@@ -197,52 +197,53 @@ const apiKeyAuthMiddleware = async (c, next) => {
 	// 验证逻辑
 	// 1. 哈希传入的 Key
 	const hashedKey = await hashApiKey(key);
-	console.log('[API Key Auth] Received key prefix:', key.substring(0, 10));
-	console.log('[API Key Auth] Hashed key:', hashedKey);
 
-	// 2. 查询数据库，同时 join User 表
+	// 2. 先查询 API Key
 	const db = orm(c);
-	const [apiKeyWithUser] = await db.select()
+	const [apiKeyRecord] = await db.select()
 		.from(apiKey)
-		.where(eq(apiKey.hashedKey, hashedKey))
-		.leftJoin(User, eq(apiKey.userId, User.userId));
-
-	console.log('[API Key Auth] Query result:', apiKeyWithUser ? 'Found' : 'Not found');
+		.where(eq(apiKey.hashedKey, hashedKey));
 
 	// 3. 处理无效 Key
-	if (!apiKeyWithUser || !apiKeyWithUser.user) {
-		console.log('[API Key Auth] Invalid key or user not found');
-		return c.json(result.fail('Invalid API Key'), 401);
+	if (!apiKeyRecord) {
+		return c.json(result.fail('Invalid API Key', 401), 401);
 	}
 
-	// 4. 时效性检查
-	const apiKeyData = apiKeyWithUser.api_key;
+	// 4. 查询关联的用户
+	const [userRecord] = await db.select()
+		.from(User)
+		.where(eq(User.userId, apiKeyRecord.userId));
+
+	if (!userRecord) {
+		return c.json(result.fail('Invalid API Key - User not found', 401), 401);
+	}
+
+	// 5. 时效性检查
+	const apiKeyData = apiKeyRecord;
 	if (apiKeyData.expiresAt && new Date() > new Date(apiKeyData.expiresAt)) {
-		return c.json(result.fail('API-Key 已过期'), 401);
+		return c.json(result.fail('API-Key 已过期', 401), 401);
 	}
 
-	// 5. Scope 注入
+	// 6. Scope 注入
 	const scopesArray = JSON.parse(apiKeyData.scopes);
 
-	// 6. 注入上下文
-	const user = apiKeyWithUser.user;
-	c.set('user', user); // <-- 核心步骤，与 user-context.js 行为一致
-	c.set('api_scopes', scopesArray); // <-- [新增] 注入权限范围
+	// 7. 注入上下文
+	c.set('user', userRecord);
+	c.set('api_scopes', scopesArray);
 
-	// 6. 质量优化 更新 Key 的 "最后使用时间" (异步，不阻塞)
+	// 8. 更新 Key 的 "最后使用时间" (异步，不阻塞)
 	const updateLastUsed = async () => {
 		try {
 			await db.update(apiKey)
 				.set({ lastUsedAt: new Date() })
-				.where(eq(apiKey.id, apiKeyWithUser.api_key.id));
+				.where(eq(apiKey.id, apiKeyData.id));
 		} catch (e) {
-			// 记录错误，但不影响主流程
 			console.error('Failed to update API key last_used_at', e);
 		}
 	};
 	c.executionCtx.waitUntil(updateLastUsed());
 
-	// 7. 进入受保护的路由 (M-API-007)
+	// 9. 进入受保护的路由
 	await next();
 };
 

@@ -122,6 +122,12 @@ app.use('*', async (c, next) => {
 		return await next();
 	}
 
+	// 检查是否已经通过 API Key 认证
+	const user = c.get('user');
+	if (user) {
+		// 已经通过 API Key 认证，跳过 JWT 检查
+		return await next();
+	}
 
 	const jwt = c.req.header(constant.TOKEN_HEADER);
 

@@ -43,12 +43,51 @@
         </el-table-column>
       </el-table>
     </div>
+
+    <!-- 美化的API Key弹窗 -->
+    <el-dialog
+      v-model="showApiKeyDialog"
+      :title="t('apiKeyGenerated')"
+      width="600px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      class="api-key-dialog"
+    >
+      <div class="api-key-content">
+        <div class="warning-section">
+          <el-icon class="warning-icon" :size="24">
+            <WarningFilled />
+          </el-icon>
+          <div class="warning-text">
+            {{ t('apiKeyWarning') }}
+          </div>
+        </div>
+
+        <div class="key-section">
+          <div class="key-label">API Key</div>
+          <div class="key-display" @click="copyToClipboard">
+            <div class="key-text">{{ generatedApiKey }}</div>
+            <el-icon class="copy-icon" :size="20">
+              <DocumentCopy />
+            </el-icon>
+          </div>
+          <div class="copy-hint">{{ t('clickToCopy') }}</div>
+        </div>
+      </div>
+
+      <template #footer>
+        <el-button type="primary" @click="closeApiKeyDialog" size="large">
+          {{ t('iHaveCopied') }}
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { WarningFilled, DocumentCopy } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
 import { useI18n } from 'vue-i18n'
 import { getApiKeys, createApiKey, deleteApiKey } from '@/request/my.js'
@@ -86,6 +125,37 @@ const loadKeys = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const showApiKeyDialog = ref(false)
+const generatedApiKey = ref('')
+
+const copyToClipboard = async () => {
+  try {
+    await navigator.clipboard.writeText(generatedApiKey.value)
+    ElMessage.success(t('copiedToClipboard'))
+  } catch (error) {
+    // 降级方案：使用传统方法复制
+    const textarea = document.createElement('textarea')
+    textarea.value = generatedApiKey.value
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    try {
+      document.execCommand('copy')
+      ElMessage.success(t('copiedToClipboard'))
+    } catch (err) {
+      ElMessage.error(t('copyFailed'))
+    }
+    document.body.removeChild(textarea)
+  }
+}
+
+const closeApiKeyDialog = () => {
+  showApiKeyDialog.value = false
+  generatedApiKey.value = ''
+  loadKeys()
 }
 
 const handleGenerate = async () => {
@@ -143,15 +213,9 @@ const handleGenerate = async () => {
     // axios 拦截器已经处理了响应，直接返回 data.data
     const apiKeyData = await createApiKey(data)
     
-    await ElMessageBox.alert(
-      `${t('apiKeyWarning')}\n\nKey: ${apiKeyData.full_key}`,
-      t('apiKeyGenerated'),
-      {
-        confirmButtonText: t('iHaveCopied'),
-        type: 'warning'
-      }
-    )
-    await loadKeys()
+    // 显示美化的弹窗
+    generatedApiKey.value = apiKeyData.full_key
+    showApiKeyDialog.value = true
   } catch (error) {
     if (error !== 'cancel') {
       console.error('生成API Key错误:', error)
@@ -193,6 +257,127 @@ onMounted(() => {
     display: grid;
     gap: 20px;
     margin-bottom: 40px;
+  }
+}
+
+:deep(.api-key-dialog) {
+  .el-dialog__header {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: #fff;
+    padding: 20px 24px;
+    margin: 0;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .el-dialog__title {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .el-dialog__headerbtn .el-dialog__close {
+    color: #fff;
+    font-size: 20px;
+    
+    &:hover {
+      color: #409eff;
+    }
+  }
+
+  .el-dialog__body {
+    padding: 30px 24px;
+    background: #f5f7fa;
+  }
+
+  .el-dialog__footer {
+    padding: 20px 24px;
+    background: #f5f7fa;
+    border-radius: 0 0 8px 8px;
+  }
+}
+
+.api-key-content {
+  .warning-section {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    margin-bottom: 24px;
+
+    .warning-icon {
+      color: #ff9800;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .warning-text {
+      color: #856404;
+      font-size: 14px;
+      line-height: 1.6;
+      flex: 1;
+    }
+  }
+
+  .key-section {
+    .key-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #303133;
+      margin-bottom: 12px;
+    }
+
+    .key-display {
+      position: relative;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      border: 2px solid #3a3a3a;
+      border-radius: 8px;
+      padding: 16px 50px 16px 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      overflow: hidden;
+
+      &:hover {
+        border-color: #409eff;
+        box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+        transform: translateY(-2px);
+
+        .copy-icon {
+          color: #409eff;
+        }
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      .key-text {
+        color: #00ff88;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 14px;
+        word-break: break-all;
+        line-height: 1.6;
+        padding-right: 10px;
+      }
+
+      .copy-icon {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #909399;
+        transition: color 0.3s ease;
+      }
+    }
+
+    .copy-hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #909399;
+      text-align: center;
+    }
   }
 }
 </style>

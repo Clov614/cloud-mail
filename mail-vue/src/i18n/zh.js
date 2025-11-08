@@ -341,6 +341,9 @@ const zh = {
     scopeEmailGenerate: '创建邮箱',
     scopeEmailList: '查询邮件列表',
     scopeEmailDetail: '查询邮件详情',
-    parseError: '解析错误'
+    parseError: '解析错误',
+    clickToCopy: '点击复制到剪贴板',
+    copiedToClipboard: '已复制到剪贴板',
+    copyFailed: '复制失败，请手动复制'
 }
 export default zh

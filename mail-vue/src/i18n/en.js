@@ -341,7 +341,10 @@ const en = {
     scopeEmailGenerate: 'Generate Email',
     scopeEmailList: 'List Messages',
     scopeEmailDetail: 'Get Message Details',
-    parseError: 'Parse Error'
+    parseError: 'Parse Error',
+    clickToCopy: 'Click to copy to clipboard',
+    copiedToClipboard: 'Copied to clipboard',
+    copyFailed: 'Copy failed, please copy manually'
 }
 
 export default en

@@ -24,6 +24,44 @@ v1Api.use('*', async (c, next) => {
   await next();
 });
 
+// 获取当前用户的所有邮箱列表
+v1Api.get('/emails', async (c) => {
+	// 权限检查
+	const apiScopes = c.get('api_scopes');
+	if (apiScopes && !apiScopes.includes('api:email-list') && !apiScopes.includes('admin')) {
+		return c.json(result.fail('权限不足 (Insufficient Scope)'), 403);
+	}
+
+	const user = c.get('user');
+	const page = parseInt(c.req.query('page') || '1');
+	const limit = parseInt(c.req.query('limit') || '25');
+	const offset = (page - 1) * limit;
+	const db = orm(c);
+
+	// 查询总数
+	const [totalResult] = await db.select({ count: count() })
+		.from(Account)
+		.where(and(eq(Account.userId, user.userId), eq(Account.isDel, 0)));
+
+	// 查询分页数据
+	const accounts = await db.select({
+		id: Account.accountId,
+		address: Account.email,
+		name: Account.name,
+		created_at: Account.createTime
+	}).from(Account)
+		.where(and(eq(Account.userId, user.userId), eq(Account.isDel, 0)))
+		.orderBy(desc(Account.accountId))
+		.limit(limit)
+		.offset(offset);
+
+	const totalItems = totalResult.count;
+	const totalPages = Math.ceil(totalItems / limit);
+	const pagination = { totalItems, totalPages, currentPage: page, limit };
+
+	return c.json(result.ok({ data: accounts, pagination }));
+});
+
 // 生成临时邮箱地址
 v1Api.post('/emails/generate', async (c) => {
   // 权限检查

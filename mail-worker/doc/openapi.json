@@ -124,6 +124,42 @@
             "description": "完整的邮箱地址"
           }
         }
+      },
+      "Account": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "邮箱账户ID"
+          },
+          "address": {
+            "type": "string",
+            "description": "邮箱地址"
+          },
+          "name": {
+            "type": "string",
+            "description": "自定义名称"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "创建时间"
+          }
+        }
+      },
+      "AccountListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Account"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        }
       }
     }
   },
@@ -133,6 +169,54 @@
     }
   ],
   "paths": {
+    "/v1/emails": {
+      "get": {
+        "summary": "获取当前用户的所有邮箱列表（分页）",
+        "description": "返回通过此 API Key 认证的用户所拥有的全部邮箱地址列表",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码（从1开始）"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 25
+            },
+            "description": "每页项目数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API Key 无效或缺失",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/emails/generate": {
       "post": {
         "summary": "创建临时邮箱",

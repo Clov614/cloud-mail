@@ -105,10 +105,8 @@ app.use('*', async (c, next) => {
 
 	const path = c.req.path;
 	
-	// 检查原始URL是否是 /v1 API请求（通过检查 X-API-Key header）
-	const apiKey = c.req.header('X-API-Key');
-	if (apiKey) {
-		// 这是 API Key 请求，跳过 JWT 认证
+	// /v1 路径完全由 v1Api 自己处理，这里直接跳过
+	if (path.startsWith('/v1')) {
 		return await next();
 	}
 
@@ -197,8 +195,10 @@ const apiKeyAuthMiddleware = async (c, next) => {
 	}
 
 	// 验证逻辑
-	// 1. 哈希传入的 Key (使用 M-API-002 的函数)
+	// 1. 哈希传入的 Key
 	const hashedKey = await hashApiKey(key);
+	console.log('[API Key Auth] Received key prefix:', key.substring(0, 10));
+	console.log('[API Key Auth] Hashed key:', hashedKey);
 
 	// 2. 查询数据库，同时 join User 表
 	const db = orm(c);
@@ -207,8 +207,11 @@ const apiKeyAuthMiddleware = async (c, next) => {
 		.where(eq(apiKey.hashedKey, hashedKey))
 		.leftJoin(User, eq(apiKey.userId, User.userId));
 
+	console.log('[API Key Auth] Query result:', apiKeyWithUser ? 'Found' : 'Not found');
+
 	// 3. 处理无效 Key
 	if (!apiKeyWithUser || !apiKeyWithUser.user) {
+		console.log('[API Key Auth] Invalid key or user not found');
 		return c.json(result.fail('Invalid API Key'), 401);
 	}
 
@@ -280,33 +283,8 @@ const adminAuth = async (c, next) => {
 	await next();
 };
 
-/**
- * Scope 权限校验中间件工厂函数
- * @param {string} requiredScope - 需要的权限范围
- * @returns {Function} Hono 中间件函数
- */
-const checkScope = (requiredScope) => {
-	return async (c, next) => {
-		const apiScopes = c.get('api_scopes');
-
-		// 如果没有 api_scopes，说明不是通过 API Key 认证的
-		if (!apiScopes) {
-			await next();
-			return;
-		}
-
-		// 检查是否包含所需权限或超管权限
-		if (!apiScopes.includes(requiredScope) && !apiScopes.includes('admin')) {
-			return c.json(result.fail('权限不足 (Insufficient Scope)'), 403);
-		}
-
-		await next();
-	};
-};
-
 export {
 	auth,
 	adminAuth,
-	apiKeyAuthMiddleware,
-	checkScope
+	apiKeyAuthMiddleware
 };

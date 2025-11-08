@@ -5,28 +5,36 @@ import { eq, and, desc, count } from 'drizzle-orm';
 import Account from '../entity/account';
 import Email from '../entity/email';
 import accountService from '../service/account-service';
-import { checkScope } from '../security/security';
+import { apiKeyAuthMiddleware } from '../security/security';
 
 const v1Api = new Hono();
 
-// [核心] 强制认证中间件
+// 应用 API Key 认证中间件
+v1Api.use('*', apiKeyAuthMiddleware);
+
+// [核心] 强制认证中间件 - 确保用户已通过 API Key 认证
 v1Api.use('*', async (c, next) => {
   const user = c.get('user');
   if (!user) {
-    // 如果 `apiKeyAuthMiddleware` 旁路了 (因为没有 Key)，
-    // 我们在这里拦截它，并返回一个清晰的 API 错误。
+    // 如果没有 user，说明 API Key 认证失败或未提供
     return c.json(result.fail('X-API-Key header is required or invalid'), 401);
   }
-  // 如果 user 存在 (来自 M6)，则继续
+  // 用户已认证，继续处理
   await next();
 });
 
-v1Api.post('/emails/generate', checkScope('api:email-generate'), async (c) => {
+// 生成临时邮箱地址
+v1Api.post('/emails/generate', async (c) => {
+  // 权限检查
+  const apiScopes = c.get('api_scopes');
+  if (apiScopes && !apiScopes.includes('api:email-generate') && !apiScopes.includes('admin')) {
+    return c.json(result.fail('权限不足 (Insufficient Scope)'), 403);
+  }
+
   const user = c.get('user'); // (已由中间件保证存在)
   const { name, domain } = await c.req.json();
 
   try {
-    //
     const newAccount = await accountService.addAccount(c, name, domain, null, null, user.userId);
     return c.json(result.ok({
       id: newAccount.id,
@@ -37,7 +45,14 @@ v1Api.post('/emails/generate', checkScope('api:email-generate'), async (c) => {
   }
 });
 
-v1Api.get('/:emailAddress/messages', checkScope('api:email-list'), async (c) => {
+// 获取邮箱的邮件列表
+v1Api.get('/:emailAddress/messages', async (c) => {
+  // 权限检查
+  const apiScopes = c.get('api_scopes');
+  if (apiScopes && !apiScopes.includes('api:email-list') && !apiScopes.includes('admin')) {
+    return c.json(result.fail('权限不足 (Insufficient Scope)'), 403);
+  }
+
   const user = c.get('user');
   const emailAddress = c.req.param('emailAddress');
   const page = parseInt(c.req.query('page') || '1');
@@ -74,7 +89,14 @@ v1Api.get('/:emailAddress/messages', checkScope('api:email-list'), async (c) => 
   return c.json(result.ok({ data: messages, pagination }));
 });
 
-v1Api.get('/:emailAddress/messages/:messageId', checkScope('api:email-detail'), async (c) => {
+// 获取单个邮件详情
+v1Api.get('/:emailAddress/messages/:messageId', async (c) => {
+  // 权限检查
+  const apiScopes = c.get('api_scopes');
+  if (apiScopes && !apiScopes.includes('api:email-detail') && !apiScopes.includes('admin')) {
+    return c.json(result.fail('权限不足 (Insufficient Scope)'), 403);
+  }
+
   const user = c.get('user');
   const emailAddress = c.req.param('emailAddress');
   const messageId = c.req.param('messageId');

@@ -4,7 +4,6 @@ import userService from './service/user-service';
 import verifyRecordService from './service/verify-record-service';
 import emailService from './service/email-service';
 import kvObjService from './service/kv-obj-service';
-import v1Api from './api/v1-api.js';
 import userContext from './security/user-context';
 import {
 	auth,
@@ -14,12 +13,6 @@ import {
 app.use('/api/*', userContext)
 app.use('/api/*', apiKeyAuthMiddleware)
 app.use('/api/*', auth)
-
-// 为 v1 API 创建独立的中间件链
-app.use('/v1/*', userContext)
-app.use('/v1/*', apiKeyAuthMiddleware)
-
-app.route('/v1', v1Api)
 
 export default {
 	 async fetch(req, env, ctx) {

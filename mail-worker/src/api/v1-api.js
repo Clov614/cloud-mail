@@ -91,7 +91,7 @@ v1Api.post('/emails/generate', async (c) => {
 });
 
 // 获取邮箱的邮件列表
-v1Api.get('/:emailAddress/messages', async (c) => {
+v1Api.get('/messages', async (c) => {
   // 权限检查
   const apiScopes = c.get('api_scopes');
   if (apiScopes && !apiScopes.includes('api:email-list') && !apiScopes.includes('admin')) {
@@ -99,7 +99,10 @@ v1Api.get('/:emailAddress/messages', async (c) => {
   }
 
   const user = c.get('user');
-  const emailAddress = c.req.param('emailAddress');
+  const emailAddress = c.req.query('emailAddress');
+  if (!emailAddress) {
+    return c.json(result.fail('Query parameter "emailAddress" is required'), 400);
+  }
   const page = parseInt(c.req.query('page') || '1');
   const limit = parseInt(c.req.query('limit') || '25');
   const offset = (page - 1) * limit;
@@ -135,7 +138,7 @@ v1Api.get('/:emailAddress/messages', async (c) => {
 });
 
 // 获取单个邮件详情
-v1Api.get('/:emailAddress/messages/:messageId', async (c) => {
+v1Api.get('/messages/:messageId', async (c) => {
   // 权限检查
   const apiScopes = c.get('api_scopes');
   if (apiScopes && !apiScopes.includes('api:email-detail') && !apiScopes.includes('admin')) {
@@ -143,7 +146,10 @@ v1Api.get('/:emailAddress/messages/:messageId', async (c) => {
   }
 
   const user = c.get('user');
-  const emailAddress = c.req.param('emailAddress');
+  const emailAddress = c.req.query('emailAddress');
+  if (!emailAddress) {
+    return c.json(result.fail('Query parameter "emailAddress" is required'), 400);
+  }
   const messageId = c.req.param('messageId');
   const db = orm(c);
 

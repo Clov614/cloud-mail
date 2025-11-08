@@ -201,10 +201,10 @@ const apiKeyAuthMiddleware = async (c, next) => {
 	if (key.length < 8 || !key.startsWith('cm_sk_')) {
 		return c.json(result.fail('Invalid API Key format', 401), 401);
 	}
-	const keyPrefix = key.substring(0, 7); // 'cm_sk_x'
+	const keyPrefix = key.substring(0, 8); // 'cm_sk_xx'
 	const possibleKeys = await db.select()
 		.from(apiKey)
-		.where(like(apiKey.keyPrefix, `${keyPrefix}%`));
+		.where(eq(apiKey.keyPrefix, keyPrefix));
 
 	if (!possibleKeys.length) {
 		return c.json(result.fail('Invalid API Key', 401), 401);

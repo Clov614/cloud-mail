@@ -104,6 +104,13 @@ const premKey = {
 app.use('*', async (c, next) => {
 
 	const path = c.req.path;
+	
+	// 检查原始URL是否是 /v1 API请求（通过检查 X-API-Key header）
+	const apiKey = c.req.header('X-API-Key');
+	if (apiKey) {
+		// 这是 API Key 请求，跳过 JWT 认证
+		return await next();
+	}
 
 	const index = exclude.findIndex(item => {
 		return path.startsWith(item);
@@ -120,13 +127,6 @@ app.use('*', async (c, next) => {
 		if (publicToken !== userPublicToken) {
 			throw new BizError(t('publicTokenFail'), 401);
 		}
-		return await next();
-	}
-
-	// 检查是否已经通过 API Key 认证
-	const user = c.get('user');
-	if (user) {
-		// 已经通过 API Key 认证，跳过 JWT 检查
 		return await next();
 	}
 

@@ -485,6 +485,9 @@ const emailService = {
 	},
 
 	async selectUserEmailCountList(c, userIds, type, del = isDel.NORMAL) {
+		if (!userIds || userIds.length === 0) {
+			return [];
+		}
 		const result = await orm(c)
 			.select({
 				userId: email.userId,
